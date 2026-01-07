@@ -4333,33 +4333,26 @@
  // Clear any pending fade timeout
  if (fadeTimeout) {
  clearTimeout(fadeTimeout);
+ fadeTimeout = null;
  }
 
- // Store previous scene reference
- const oldScene = previousScene;
+ // Clear animation frames for old scenes immediately
+ Object.values(sceneIntervals).forEach(cancelAnimationFrame);
+ sceneIntervals = {};
+
+ // Remove active from ALL other scenes immediately to prevent ghosts
+ document.querySelectorAll('.crop-scene').forEach(s => {
+ if (s !== newScene) {
+ s.classList.remove('active');
+ s.classList.remove('fading-in');
+ }
+ });
 
  // Initialize the new scene elements
  config.initScene();
 
- // Add transitioning class for crossfade
- newScene.classList.add('fading-in');
+ // Activate new scene with fade
  newScene.classList.add('active');
-
- // Remove fading-in class after fade completes
- setTimeout(() => newScene.classList.remove('fading-in'), 800);
-
- // Fade out old scene after longer overlap for smooth crossfade
- fadeTimeout = setTimeout(() => {
- document.querySelectorAll('.crop-scene').forEach(s => {
- if (s !== newScene) {
- s.classList.remove('active');
- }
- });
-
- // Clear animation frames for old scenes
- Object.values(sceneIntervals).forEach(cancelAnimationFrame);
- sceneIntervals = {};
- }, 1200); // Longer overlap for smoother crossfade
 
  previousScene = newScene;
  currentCropScene = cropName;
