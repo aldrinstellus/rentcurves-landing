@@ -1404,27 +1404,27 @@
 
  .crop-item.crop-corn .crop-item-inner {
  border-radius: 55% 20% 60% 25% / 15% 8% 80% 85%;
- animation: corn-morph var(--morph-speed, 5s) ease-in-out infinite;
+ animation: corn-morph var(--morph-speed, 12s) ease-in-out infinite;
  }
  .crop-item.crop-soybeans .crop-item-inner {
  border-radius: 85% 15% 80% 20% / 75% 25% 70% 30%;
- animation: bean-morph var(--morph-speed, 5s) ease-in-out infinite;
+ animation: bean-morph var(--morph-speed, 12s) ease-in-out infinite;
  }
  .crop-item.crop-wheat .crop-item-inner {
  border-radius: 70% 30% 25% 15% / 10% 5% 85% 90%;
- animation: wheat-morph var(--morph-speed, 5s) ease-in-out infinite;
+ animation: wheat-morph var(--morph-speed, 12s) ease-in-out infinite;
  }
  .crop-item.crop-canola .crop-item-inner {
  border-radius: 20% 80% 75% 25% / 25% 75% 25% 75%;
- animation: canola-morph var(--morph-speed, 5s) ease-in-out infinite;
+ animation: canola-morph var(--morph-speed, 12s) ease-in-out infinite;
  }
  .crop-item.crop-cotton .crop-item-inner {
  border-radius: 85% 25% 75% 35% / 70% 80% 25% 75%;
- animation: cotton-morph var(--morph-speed, 5s) ease-in-out infinite;
+ animation: cotton-morph var(--morph-speed, 12s) ease-in-out infinite;
  }
  .crop-item.crop-rice .crop-item-inner {
  border-radius: 35% 10% 38% 8% / 55% 80% 50% 85%;
- animation: rice-morph var(--morph-speed, 5s) ease-in-out infinite;
+ animation: rice-morph var(--morph-speed, 12s) ease-in-out infinite;
  }
 
  /* Highlight particles around spotlit crop */
@@ -3861,8 +3861,8 @@
 
  wheelRotation += spinSpeed;
 
- // Update morph speed based on rotation speed (faster spin = faster morph)
- const morphSpeed = Math.max(1.5, (8 - (spinSpeed * 12)) * 1.3); // Slower with higher variation // 5% slower
+ // Update morph speed based on rotation speed (slower morph for smoother feel)
+ const morphSpeed = Math.max(8, (15 - (spinSpeed * 10)) * 1.5); // Much slower morphing
  document.documentElement.style.setProperty('--morph-speed', morphSpeed + 's');
 
  // Update each crop position
@@ -4442,7 +4442,7 @@
  isSpinning = false;
 
  // Slow down morph animation when stopped
- document.documentElement.style.setProperty('--morph-speed', '7s');
+ document.documentElement.style.setProperty('--morph-speed', '15s');
 
  // Create particle burst effect
  createSelectionBurst(element, crop.theme);
