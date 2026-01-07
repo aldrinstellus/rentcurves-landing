@@ -72,11 +72,18 @@
 
         html {
             scroll-behavior: smooth;
+            /* Hide scrollbar but keep scroll functionality */
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE/Edge */
+        }
+
+        html::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Opera */
         }
 
         body {
             font-family: 'Outfit', sans-serif;
-            background: linear-gradient(180deg, 
+            background: linear-gradient(180deg,
                 color-mix(in srgb, var(--theme-primary) 8%, var(--midnight)) 0%,
                 var(--midnight) 30%,
                 var(--midnight) 70%,
@@ -4486,7 +4493,7 @@
 
         // Slow down on hover and click handlers
         function setupCropItemHandlers() {
-            document.querySelectorAll('.crop-item').forEach((item, index) => {
+            document.querySelectorAll('.crop-item').forEach((item) => {
                 item.addEventListener('mouseenter', () => {
                     if (isSpinning) spinSpeed = 0.1;  // Slow on hover
                 });
@@ -4495,9 +4502,13 @@
                     if (isSpinning) spinSpeed = 0.3;  // Return to normal speed
                 });
 
-                // Click to select
+                // Click to select - use data-crop-id to get correct crop
                 item.addEventListener('click', () => {
-                    stopSpinAndSelect(cropsData[index], item);
+                    const cropId = parseInt(item.dataset.cropId);
+                    const crop = cropsData.find(c => c.id === cropId);
+                    if (crop) {
+                        stopSpinAndSelect(crop, item);
+                    }
                 });
             });
         }
