@@ -4369,8 +4369,8 @@
  Cotton: { containerId: 'cotton-particles', className: 'cotton-fluff', max: 10, interval: 2000, duration: [15, 10], lifetime: 22000, drift: true }
  };
 
- const config = particleConfig[cropName];
- if (config) {
+ const pConfig = particleConfig[cropName];
+ if (pConfig) {
  let lastSpawn = 0;
  const spawnParticle = (timestamp) => {
  if (currentCropScene !== cropName) return; // Stop if scene changed
@@ -4378,15 +4378,15 @@
  sceneIntervals[cropName] = requestAnimationFrame(spawnParticle);
  return;
  }
- if (timestamp - lastSpawn >= config.interval) {
- const container = document.getElementById(config.containerId);
- if (container && container.children.length < config.max) {
+ if (timestamp - lastSpawn >= pConfig.interval) {
+ const container = document.getElementById(pConfig.containerId);
+ if (container && container.children.length < pConfig.max) {
  const particle = document.createElement('div');
- particle.className = config.className;
- particle.style.cssText = `left:${5 + Math.random() * 90}%;animation-duration:${config.duration[0] + Math.random() * config.duration[1]}s`;
- if (config.drift) particle.style.setProperty('--drift-x', (Math.random() * 160 - 80) + 'px');
+ particle.className = pConfig.className;
+ particle.style.cssText = `left:${5 + Math.random() * 90}%;animation-duration:${pConfig.duration[0] + Math.random() * pConfig.duration[1]}s`;
+ if (pConfig.drift) particle.style.setProperty('--drift-x', (Math.random() * 160 - 80) + 'px');
  container.appendChild(particle);
- setTimeout(() => particle.remove(), config.lifetime);
+ setTimeout(() => particle.remove(), pConfig.lifetime);
  }
  lastSpawn = timestamp;
  }
