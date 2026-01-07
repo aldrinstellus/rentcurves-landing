@@ -1,0 +1,25 @@
+{
+  "version": 2,
+  "name": "rentcurves-landing",
+  "public": true,
+  "builds": [
+    {
+      "src": "src/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/",
+      "dest": "/src/index.html"
+    },
+    {
+      "src": "/3d",
+      "dest": "/src/index-3d.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/src/$1"
+    }
+  ]
+}
