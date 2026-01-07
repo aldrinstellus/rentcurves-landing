@@ -56,10 +56,18 @@
         /* Theme transitions for dynamic color changes */
         .logo-mark, .logo-text span, .btn-header, .hero-title .accent,
         .instruction, .instruction-icon, .calculate-btn, .rent-value,
-        .cta-btn, .gradient-orb, .crop-item-inner, .wheel-ring,
+        .cta-btn, .gradient-orb, .wheel-ring,
         .nav-links a::after, .hero-tag svg, .input-icon, .rent-title,
         .theme-gradient, .center-glow, .theme-lines {
             transition: all var(--theme-speed) ease !important;
+        }
+
+        /* Separate transition for crop-item-inner to not interfere with shape animations */
+        .crop-item-inner {
+            transition: background var(--theme-speed) ease,
+                        border-color var(--theme-speed) ease,
+                        box-shadow var(--theme-speed) ease,
+                        transform 0.3s ease !important;
         }
 
         html {
