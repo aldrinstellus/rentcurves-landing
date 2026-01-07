@@ -4594,15 +4594,139 @@
  // ===========================================
  calcButton.addEventListener('click', calculateRent);
 
- // ===========================================
+
+// ===========================================
  // INIT
+
+ // ===========================================
+ // WHEEL DRAG/SPIN INTERACTION
+ // ===========================================
+ let isDragging = false;
+ let dragStartAngle = 0;
+ let dragStartRotation = 0;
+ let lastDragAngle = 0;
+ let dragVelocity = 0;
+ let lastDragTime = 0;
+ let momentumAnimationId = null;
+
+ function getAngleFromCenter(x, y, centerX, centerY) {
+   return Math.atan2(y - centerY, x - centerX) * (180 / Math.PI);
+ }
+
+ function initWheelDrag() {
+   const wheelContainer = document.querySelector('.wheel-container');
+   if (!wheelContainer) return;
+
+   function getWheelCenter() {
+     const rect = wheelContainer.getBoundingClientRect();
+     return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+   }
+
+   function startDrag(clientX, clientY) {
+     if (selectedCrop) return;
+     isDragging = true;
+     isSpinning = false;
+     if (momentumAnimationId) { cancelAnimationFrame(momentumAnimationId); momentumAnimationId = null; }
+     const center = getWheelCenter();
+     dragStartAngle = getAngleFromCenter(clientX, clientY, center.x, center.y);
+     dragStartRotation = wheelRotation;
+     lastDragAngle = dragStartAngle;
+     lastDragTime = performance.now();
+     dragVelocity = 0;
+     wheelContainer.style.cursor = 'grabbing';
+   }
+
+   function onDrag(clientX, clientY) {
+     if (!isDragging) return;
+     const center = getWheelCenter();
+     const currentAngle = getAngleFromCenter(clientX, clientY, center.x, center.y);
+     let deltaAngle = currentAngle - dragStartAngle;
+     if (deltaAngle > 180) deltaAngle -= 360;
+     if (deltaAngle < -180) deltaAngle += 360;
+     wheelRotation = dragStartRotation + deltaAngle;
+     const now = performance.now();
+     const dt = now - lastDragTime;
+     if (dt > 0) {
+       let angleDelta = currentAngle - lastDragAngle;
+       if (angleDelta > 180) angleDelta -= 360;
+       if (angleDelta < -180) angleDelta += 360;
+       dragVelocity = angleDelta / dt * 16;
+     }
+     lastDragAngle = currentAngle;
+     lastDragTime = now;
+     updateWheelDuringDrag();
+   }
+
+   function endDrag() {
+     if (!isDragging) return;
+     isDragging = false;
+     wheelContainer.style.cursor = 'grab';
+     if (Math.abs(dragVelocity) > 0.1) {
+       applyMomentum();
+     } else {
+       setTimeout(() => { if (!selectedCrop && !isDragging) { isSpinning = true; startAutoRotation(); } }, 1500);
+     }
+   }
+
+   function applyMomentum() {
+     const friction = 0.95;
+     function momentumStep() {
+       if (Math.abs(dragVelocity) < 0.05 || isDragging || selectedCrop) {
+         setTimeout(() => { if (!selectedCrop && !isDragging) { isSpinning = true; startAutoRotation(); } }, 500);
+         return;
+       }
+       wheelRotation += dragVelocity;
+       dragVelocity *= friction;
+       updateWheelDuringDrag();
+       momentumAnimationId = requestAnimationFrame(momentumStep);
+     }
+     momentumStep();
+   }
+
+   function updateWheelDuringDrag() {
+     const radius = getWheelRadius();
+     cropElements.forEach((item) => {
+       const angle = item.baseAngle + wheelRotation;
+       const rad = (angle * Math.PI) / 180;
+       const x = Math.cos(rad) * radius;
+       const y = Math.sin(rad) * radius;
+       const normalizedAngle = ((angle % 360) + 360) % 360;
+       const distanceFromTop = Math.abs(normalizedAngle - 270);
+       const atTop = distanceFromTop < 25 || distanceFromTop > 335;
+       const scale = atTop ? 1.12 : 1;
+       item.el.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${scale})`;
+       if (atTop && !selectedCrop) {
+         item.el.querySelector('.crop-item-inner').style.boxShadow = `0 0 40px ${item.crop.theme.glow}, inset 0 0 15px ${item.crop.theme.glow}`;
+         item.el.querySelector('.crop-item-inner').style.borderColor = item.crop.theme.secondary;
+         if (spotlightCrop !== item.crop) {
+           spotlightCrop = item.crop;
+           hintThemeSpotlight(item.crop.theme, item.crop.name);
+           const centerPromptText = document.querySelector('.center-prompt-text');
+           if (centerPromptText) { centerPromptText.textContent = item.crop.name; centerPromptText.style.color = item.crop.theme.accent; }
+         }
+       } else if (!selectedCrop) {
+         item.el.querySelector('.crop-item-inner').style.boxShadow = '';
+         item.el.querySelector('.crop-item-inner').style.borderColor = '';
+       }
+     });
+   }
+
+   wheelContainer.addEventListener('mousedown', (e) => { if (e.target.closest('.crop-item')) return; startDrag(e.clientX, e.clientY); });
+   document.addEventListener('mousemove', (e) => onDrag(e.clientX, e.clientY));
+   document.addEventListener('mouseup', endDrag);
+   wheelContainer.addEventListener('touchstart', (e) => { if (e.target.closest('.crop-item')) return; const touch = e.touches[0]; startDrag(touch.clientX, touch.clientY); }, { passive: true });
+   document.addEventListener('touchmove', (e) => { if (!isDragging) return; const touch = e.touches[0]; onDrag(touch.clientX, touch.clientY); }, { passive: true });
+   document.addEventListener('touchend', endDrag);
+   wheelContainer.style.cursor = 'grab';
+ }
+
  // ===========================================
  document.addEventListener('DOMContentLoaded', () => {
  initWheel();
  setupCropItemHandlers(); // Setup click handlers after wheel items exist
  createSeeds();
  // Start auto-rotation after wheel is initialized
- setTimeout(() => initAutoRotation(), 100);
+ setTimeout(() => { initAutoRotation(); initWheelDrag(); }, 100);
  });
  </script>
 </body>
