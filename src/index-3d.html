@@ -1,0 +1,1673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rent Curves - 3D Experience</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- GSAP (Webflow Compatible) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <!-- Anime.js for micro-interactions -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
+
+    <style>
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --accent-cyan: #00f5d4;
+            --accent-purple: #9b5de5;
+            --accent-pink: #f15bb5;
+            --accent-yellow: #fee440;
+            --accent-orange: #ff6b35;
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255,255,255,0.6);
+            --glass: rgba(255,255,255,0.03);
+            --glass-border: rgba(255,255,255,0.1);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* Three.js Canvas Background */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Gradient Mesh Overlay */
+        .gradient-mesh {
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(155, 93, 229, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(0, 245, 212, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(241, 91, 181, 0.05) 0%, transparent 60%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Noise Texture */
+        .noise {
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            opacity: 0.02;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 1.5rem 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(to bottom, rgba(10, 10, 15, 0.9) 0%, transparent 100%);
+            backdrop-filter: blur(20px);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-purple) 100%);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .logo-icon::before {
+            content: '';
+            position: absolute;
+            inset: 2px;
+            background: var(--bg-primary);
+            border-radius: 12px;
+        }
+
+        .logo-icon svg {
+            position: relative;
+            z-index: 1;
+            width: 28px;
+            height: 28px;
+        }
+
+        .logo-text {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-cyan) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--text-primary);
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .btn-glow {
+            padding: 0.75rem 1.75rem;
+            background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-purple) 100%);
+            border: none;
+            border-radius: 100px;
+            color: var(--bg-primary);
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .btn-glow::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-pink) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .btn-glow span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .btn-glow:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px rgba(0, 245, 212, 0.3);
+        }
+
+        .btn-glow:hover::before {
+            opacity: 1;
+        }
+
+        /* Main Content */
+        .main {
+            position: relative;
+            z-index: 10;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8rem 2rem 4rem;
+        }
+
+        /* Hero Section */
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 100px;
+            font-size: 0.8rem;
+            color: var(--accent-cyan);
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .hero-badge .dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent-cyan);
+            border-radius: 50%;
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.5; }
+        }
+
+        .hero-title {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(3rem, 8vw, 6rem);
+            font-weight: 800;
+            text-align: center;
+            line-height: 1.05;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-primary) 40%, var(--accent-cyan) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-title .highlight {
+            background: linear-gradient(135deg, var(--accent-yellow) 0%, var(--accent-orange) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            text-align: center;
+            max-width: 500px;
+            margin-bottom: 3rem;
+            line-height: 1.6;
+        }
+
+        /* 3D Wheel Section */
+        .wheel-section {
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            perspective: 1500px;
+        }
+
+        .wheel-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            aspect-ratio: 1;
+            margin: 0 auto;
+            transform-style: preserve-3d;
+        }
+
+        /* 3D Orbital Ring */
+        .orbital-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 90%;
+            height: 90%;
+            transform: translate(-50%, -50%) rotateX(70deg);
+            border: 2px solid rgba(0, 245, 212, 0.2);
+            border-radius: 50%;
+            animation: orbit-rotate 30s linear infinite;
+        }
+
+        .orbital-ring::before {
+            content: '';
+            position: absolute;
+            inset: -30px;
+            border: 1px solid rgba(155, 93, 229, 0.1);
+            border-radius: 50%;
+        }
+
+        @keyframes orbit-rotate {
+            from { transform: translate(-50%, -50%) rotateX(70deg) rotateZ(0deg); }
+            to { transform: translate(-50%, -50%) rotateX(70deg) rotateZ(360deg); }
+        }
+
+        /* Center Display */
+        .center-hub {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(155, 93, 229, 0.2) 0%, transparent 70%);
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+        }
+
+        .center-hub::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border: 2px solid var(--glass-border);
+            border-radius: 50%;
+            animation: pulse-ring 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse-ring {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.2; }
+        }
+
+        .selected-crop-display {
+            text-align: center;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .selected-crop-display.active {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .selected-crop-name {
+            font-family: 'Syne', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-cyan) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .selected-crop-state {
+            font-size: 0.85rem;
+            color: var(--accent-purple);
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            margin-top: 0.25rem;
+        }
+
+        .center-prompt {
+            text-align: center;
+            transition: opacity 0.3s ease;
+        }
+
+        .center-prompt.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .center-prompt-text {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* 3D Crop Items */
+        .crop-wheel {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+        }
+
+        .crop-item {
+            position: absolute;
+            width: 140px;
+            height: 140px;
+            left: 50%;
+            top: 50%;
+            margin-left: -70px;
+            margin-top: -70px;
+            cursor: pointer;
+            transform-style: preserve-3d;
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .crop-item-inner {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
+            border: 1px solid var(--glass-border);
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            backdrop-filter: blur(20px);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .crop-item-inner::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: conic-gradient(from 0deg, transparent, rgba(0, 245, 212, 0.3), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            animation: rotate-glow 3s linear infinite paused;
+        }
+
+        .crop-item:hover .crop-item-inner::before {
+            opacity: 1;
+            animation-play-state: running;
+        }
+
+        @keyframes rotate-glow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .crop-item:hover .crop-item-inner {
+            border-color: var(--accent-cyan);
+            transform: scale(1.1) translateZ(30px);
+            box-shadow:
+                0 0 40px rgba(0, 245, 212, 0.3),
+                inset 0 0 30px rgba(0, 245, 212, 0.1);
+        }
+
+        .crop-item.selected .crop-item-inner {
+            border-color: var(--accent-yellow);
+            background: linear-gradient(145deg, rgba(254, 228, 64, 0.15) 0%, rgba(255, 107, 53, 0.1) 100%);
+            box-shadow:
+                0 0 60px rgba(254, 228, 64, 0.4),
+                inset 0 0 40px rgba(254, 228, 64, 0.1);
+        }
+
+        .crop-icon {
+            font-size: 2.8rem;
+            filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3));
+            transition: transform 0.3s ease;
+        }
+
+        .crop-item:hover .crop-icon {
+            transform: scale(1.15) translateZ(20px);
+        }
+
+        .crop-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            line-height: 1.3;
+        }
+
+        .crop-item:hover .crop-label {
+            color: var(--text-primary);
+        }
+
+        .crop-item.selected .crop-label {
+            color: var(--accent-yellow);
+        }
+
+        /* Spotlight effect for featured item during rotation */
+        .crop-item.spotlight .crop-item-inner {
+            border-color: var(--accent-cyan);
+            box-shadow:
+                0 0 50px rgba(0, 245, 212, 0.5),
+                0 0 100px rgba(0, 245, 212, 0.2),
+                inset 0 0 30px rgba(0, 245, 212, 0.15);
+        }
+
+        .crop-item.spotlight .crop-icon {
+            transform: scale(1.1);
+            filter: drop-shadow(0 0 15px rgba(0, 245, 212, 0.8));
+        }
+
+        .crop-item.spotlight .crop-label {
+            color: var(--accent-cyan);
+            text-shadow: 0 0 10px rgba(0, 245, 212, 0.5);
+        }
+
+        /* 3D Input Cards */
+        .inputs-row {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+            perspective: 1000px;
+        }
+
+        .input-card {
+            background: linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 1.25rem 1.5rem;
+            min-width: 120px;
+            text-align: center;
+            backdrop-filter: blur(20px);
+            opacity: 0;
+            transform: translateY(30px) rotateX(-15deg);
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .input-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 245, 212, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .input-card.visible {
+            opacity: 1;
+            transform: translateY(0) rotateX(0);
+        }
+
+        .input-card.shimmer::before {
+            left: 100%;
+        }
+
+        .input-card:hover {
+            transform: translateY(-5px) rotateX(5deg);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 20px 40px rgba(0, 245, 212, 0.15);
+        }
+
+        .input-icon-wrap {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 0.75rem;
+            background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-purple) 100%);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .input-icon-wrap::before {
+            content: '';
+            position: absolute;
+            inset: 2px;
+            background: var(--bg-primary);
+            border-radius: 12px;
+        }
+
+        .input-icon {
+            position: relative;
+            z-index: 1;
+            font-size: 1rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-purple) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .input-label {
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.4rem;
+        }
+
+        .input-value {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        /* Calculate Button */
+        .calc-section {
+            margin-top: 3rem;
+            text-align: center;
+        }
+
+        .calc-button {
+            position: relative;
+            background: transparent;
+            border: 2px solid var(--accent-cyan);
+            color: var(--accent-cyan);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            padding: 1.25rem 3rem;
+            border-radius: 100px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            opacity: 0;
+            transform: translateY(30px);
+            pointer-events: none;
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            overflow: hidden;
+        }
+
+        .calc-button::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-purple) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .calc-button span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .calc-button.visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: all;
+        }
+
+        .calc-button:hover {
+            color: var(--bg-primary);
+            box-shadow: 0 0 50px rgba(0, 245, 212, 0.4);
+        }
+
+        .calc-button:hover::before {
+            opacity: 1;
+        }
+
+        .calc-button.calculating {
+            background: linear-gradient(135deg, var(--accent-yellow) 0%, var(--accent-orange) 100%);
+            border-color: transparent;
+            color: var(--bg-primary);
+        }
+
+        .gear-icon {
+            width: 24px;
+            height: 24px;
+            transition: transform 0.3s ease;
+        }
+
+        .calc-button:hover .gear-icon {
+            transform: rotate(90deg);
+        }
+
+        .calc-button.calculating .gear-icon {
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* 3D Result Section */
+        .result-section {
+            margin-top: 4rem;
+            text-align: center;
+            perspective: 1500px;
+        }
+
+        .rent-result {
+            position: relative;
+            padding: 3rem;
+            opacity: 0;
+            transform: translateZ(-100px) rotateX(30deg);
+            transition: all 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .rent-result.visible {
+            opacity: 1;
+            transform: translateZ(0) rotateX(0);
+        }
+
+        /* Holographic Effect */
+        .holo-container {
+            position: absolute;
+            inset: -50px;
+            background: conic-gradient(
+                from 0deg,
+                rgba(0, 245, 212, 0.1),
+                rgba(155, 93, 229, 0.1),
+                rgba(241, 91, 181, 0.1),
+                rgba(254, 228, 64, 0.1),
+                rgba(0, 245, 212, 0.1)
+            );
+            border-radius: 50%;
+            filter: blur(60px);
+            animation: holo-rotate 10s linear infinite;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .rent-result.visible .holo-container {
+            opacity: 1;
+        }
+
+        @keyframes holo-rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .rent-badge {
+            display: inline-block;
+            padding: 0.5rem 1.5rem;
+            background: linear-gradient(135deg, var(--accent-yellow) 0%, var(--accent-orange) 100%);
+            color: var(--bg-primary);
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            border-radius: 100px;
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        .rent-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            margin-bottom: 0.5rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        .rent-value-wrap {
+            position: relative;
+            display: inline-block;
+        }
+
+        .rent-value {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(4rem, 15vw, 10rem);
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent-yellow) 0%, var(--accent-orange) 50%, var(--accent-pink) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            position: relative;
+            z-index: 10;
+            text-shadow: 0 0 100px rgba(254, 228, 64, 0.5);
+        }
+
+        .rent-value-glow {
+            position: absolute;
+            inset: 0;
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(4rem, 15vw, 10rem);
+            font-weight: 800;
+            color: var(--accent-yellow);
+            filter: blur(50px);
+            opacity: 0.6;
+            z-index: 1;
+            animation: glow-pulse 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow-pulse {
+            from { opacity: 0.4; filter: blur(40px); }
+            to { opacity: 0.7; filter: blur(60px); }
+        }
+
+        .rent-unit {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Particle Burst */
+        .particle-burst {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            margin-top: 3rem;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease 0.3s;
+        }
+
+        .cta-section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .cta-main {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1.25rem 2.5rem;
+            background: linear-gradient(135deg, var(--accent-yellow) 0%, var(--accent-orange) 100%);
+            color: var(--bg-primary);
+            font-size: 1.1rem;
+            font-weight: 700;
+            text-decoration: none;
+            border-radius: 100px;
+            transition: all 0.4s ease;
+            box-shadow: 0 10px 40px rgba(254, 228, 64, 0.3);
+        }
+
+        .cta-main:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 20px 60px rgba(254, 228, 64, 0.4);
+        }
+
+        .cta-sub {
+            display: block;
+            margin-top: 1rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Mobile Menu */
+        .mobile-menu-toggle {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .mobile-menu-toggle span {
+            width: 24px;
+            height: 2px;
+            background: var(--text-primary);
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .nav-links { display: none; }
+            .mobile-menu-toggle { display: flex; }
+            .header { padding: 1rem 1.5rem; }
+
+            .crop-item {
+                width: 110px;
+                height: 110px;
+                margin-left: -55px;
+                margin-top: -55px;
+            }
+
+            .crop-icon { font-size: 2.2rem; }
+            .crop-label { font-size: 0.6rem; }
+
+            .input-card {
+                min-width: 100px;
+                padding: 1rem 1.25rem;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .main { padding: 6rem 1rem 3rem; }
+            .hero-title { font-size: clamp(2rem, 10vw, 3rem); }
+
+            .wheel-container { max-width: 320px; }
+
+            .crop-item {
+                width: 80px;
+                height: 80px;
+                margin-left: -40px;
+                margin-top: -40px;
+            }
+
+            .crop-icon { font-size: 1.6rem; }
+            .crop-label { font-size: 0.5rem; }
+
+            .input-card {
+                min-width: 60px;
+                padding: 0.75rem;
+                flex: 0 0 calc(33% - 0.5rem);
+            }
+
+            .input-value { font-size: 1.1rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Three.js Background -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Overlays -->
+    <div class="gradient-mesh"></div>
+    <div class="noise"></div>
+
+    <!-- Header -->
+    <header class="header">
+        <a href="#" class="logo">
+            <div class="logo-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="url(#logo-gradient)" stroke-width="2.5">
+                    <defs>
+                        <linearGradient id="logo-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#00f5d4"/>
+                            <stop offset="100%" stop-color="#9b5de5"/>
+                        </linearGradient>
+                    </defs>
+                    <path d="M3 18 Q12 4 21 18"/>
+                    <circle cx="12" cy="12" r="2" fill="url(#logo-gradient)"/>
+                </svg>
+            </div>
+            <span class="logo-text">RentCurve</span>
+        </a>
+        <nav class="nav">
+            <ul class="nav-links">
+                <li><a href="#">Features</a></li>
+                <li><a href="#">Pricing</a></li>
+                <li><a href="#">How It Works</a></li>
+                <li><a href="#">About</a></li>
+            </ul>
+            <a href="https://www.rentcurves.com" class="btn-glow"><span>Get Started</span></a>
+            <button class="mobile-menu-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="hero-badge">
+            <span class="dot"></span>
+            <span>Agricultural Intelligence Platform</span>
+        </div>
+
+        <h1 class="hero-title">
+            Calculate Your<br><span class="highlight">Crop Rent</span> Instantly
+        </h1>
+
+        <p class="hero-subtitle">
+            Select a crop, view real-time data, and get precise land rent calculations in seconds.
+        </p>
+
+        <!-- 3D Wheel Section -->
+        <div class="wheel-section">
+            <div class="wheel-container">
+                <div class="orbital-ring"></div>
+                <div class="crop-wheel" id="cropWheel"></div>
+
+                <div class="center-hub">
+                    <div class="center-prompt" id="centerPrompt">
+                        <div class="center-prompt-text">Select a crop</div>
+                    </div>
+                    <div class="selected-crop-display" id="selectedDisplay">
+                        <div class="selected-crop-name" id="selectedName"></div>
+                        <div class="selected-crop-state" id="selectedState"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Cards -->
+            <div class="inputs-row" id="inputsRow">
+                <div class="input-card" data-input="price">
+                    <div class="input-icon-wrap"><span class="input-icon">$</span></div>
+                    <div class="input-label">Price</div>
+                    <div class="input-value" id="priceValue">--</div>
+                </div>
+                <div class="input-card" data-input="yield">
+                    <div class="input-icon-wrap"><span class="input-icon">Y</span></div>
+                    <div class="input-label">Yield</div>
+                    <div class="input-value" id="yieldValue">--</div>
+                </div>
+                <div class="input-card" data-input="cost">
+                    <div class="input-icon-wrap"><span class="input-icon">C</span></div>
+                    <div class="input-label">Cost</div>
+                    <div class="input-value" id="costValue">--</div>
+                </div>
+                <div class="input-card" data-input="high">
+                    <div class="input-icon-wrap"><span class="input-icon">H</span></div>
+                    <div class="input-label">High</div>
+                    <div class="input-value" id="highValue">--</div>
+                </div>
+                <div class="input-card" data-input="avg">
+                    <div class="input-icon-wrap"><span class="input-icon">A</span></div>
+                    <div class="input-label">Avg</div>
+                    <div class="input-value" id="avgValue">--</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calculate Button -->
+        <div class="calc-section">
+            <button class="calc-button" id="calcButton">
+                <svg class="gear-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+                </svg>
+                <span>Calculate Rent</span>
+            </button>
+        </div>
+
+        <!-- Result Section -->
+        <div class="result-section">
+            <div class="rent-result" id="rentResult">
+                <div class="holo-container"></div>
+                <div class="particle-burst" id="particleBurst"></div>
+                <div class="rent-badge">Calculated Result</div>
+                <div class="rent-label">Your Land Rent</div>
+                <div class="rent-value-wrap">
+                    <div class="rent-value-glow" id="rentGlow">$0</div>
+                    <div class="rent-value" id="rentValue">$0</div>
+                </div>
+                <div class="rent-unit">per acre / per year</div>
+            </div>
+        </div>
+
+        <!-- CTA -->
+        <div class="cta-section" id="ctaSection">
+            <a href="https://www.rentcurves.com" class="cta-main">
+                Start Using Rent Curves
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+            </a>
+            <span class="cta-sub">Get precise calculations for all your fields</span>
+        </div>
+    </main>
+
+    <script>
+        // ===========================================
+        // THREE.JS BACKGROUND
+        // ===========================================
+        const canvas = document.getElementById('bg-canvas');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+        // Particles
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlesCount = 2000;
+        const posArray = new Float32Array(particlesCount * 3);
+
+        for (let i = 0; i < particlesCount * 3; i++) {
+            posArray[i] = (Math.random() - 0.5) * 10;
+        }
+
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+
+        const particlesMaterial = new THREE.PointsMaterial({
+            size: 0.008,
+            color: 0x00f5d4,
+            transparent: true,
+            opacity: 0.8,
+            blending: THREE.AdditiveBlending
+        });
+
+        const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(particlesMesh);
+
+        // Floating geometric shapes
+        const torusGeometry = new THREE.TorusGeometry(1.5, 0.02, 16, 100);
+        const torusMaterial = new THREE.MeshBasicMaterial({
+            color: 0x9b5de5,
+            transparent: true,
+            opacity: 0.3
+        });
+        const torus = new THREE.Mesh(torusGeometry, torusMaterial);
+        torus.position.set(3, 1, -3);
+        scene.add(torus);
+
+        const torus2 = new THREE.Mesh(
+            new THREE.TorusGeometry(1, 0.015, 16, 100),
+            new THREE.MeshBasicMaterial({ color: 0x00f5d4, transparent: true, opacity: 0.2 })
+        );
+        torus2.position.set(-3, -1, -4);
+        scene.add(torus2);
+
+        camera.position.z = 3;
+
+        // Mouse movement effect
+        let mouseX = 0, mouseY = 0;
+        document.addEventListener('mousemove', (e) => {
+            mouseX = (e.clientX / window.innerWidth - 0.5) * 0.5;
+            mouseY = (e.clientY / window.innerHeight - 0.5) * 0.5;
+        });
+
+        function animateBackground() {
+            requestAnimationFrame(animateBackground);
+
+            particlesMesh.rotation.y += 0.0003;
+            particlesMesh.rotation.x += 0.0001;
+
+            torus.rotation.x += 0.005;
+            torus.rotation.y += 0.003;
+
+            torus2.rotation.x -= 0.003;
+            torus2.rotation.y -= 0.005;
+
+            camera.position.x += (mouseX - camera.position.x) * 0.05;
+            camera.position.y += (-mouseY - camera.position.y) * 0.05;
+            camera.lookAt(scene.position);
+
+            renderer.render(scene, camera);
+        }
+
+        animateBackground();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // ===========================================
+        // CROP DATA
+        // ===========================================
+        const crops = [
+            { id: 1, name: "Corn", state: "Iowa", icon: "🌽", price: 486, yield: 220, cost: 425, high: 195, avg: 175 },
+            { id: 2, name: "Soybeans", state: "Illinois", icon: "🫘", price: 1280, yield: 58, cost: 380, high: 52, avg: 48 },
+            { id: 3, name: "Wheat", state: "Kansas", icon: "🌾", price: 680, yield: 45, cost: 295, high: 42, avg: 38 },
+            { id: 4, name: "Canola", state: "Montana", icon: "🌻", price: 1450, yield: 32, cost: 320, high: 30, avg: 26 },
+            { id: 5, name: "Cotton", state: "Texas", icon: "☁️", price: 92, yield: 850, cost: 510, high: 920, avg: 780 },
+            { id: 6, name: "Rice", state: "Arkansas", icon: "🍚", price: 1520, yield: 72, cost: 445, high: 78, avg: 68 }
+        ];
+
+        let selectedCrop = null;
+        const cropWheel = document.getElementById('cropWheel');
+        const calcButton = document.getElementById('calcButton');
+
+        // ===========================================
+        // GSAP INTRO ANIMATION
+        // ===========================================
+        gsap.from('.hero-badge', { opacity: 0, y: 30, duration: 1, delay: 0.3 });
+        gsap.from('.hero-title', { opacity: 0, y: 50, duration: 1, delay: 0.5 });
+        gsap.from('.hero-subtitle', { opacity: 0, y: 30, duration: 1, delay: 0.7 });
+
+        // ===========================================
+        // AUTO-ROTATING WHEEL SYSTEM
+        // ===========================================
+        let wheelRotation = 0;
+        let isSpinning = true;
+        let spinSpeed = 0.3; // degrees per frame
+        let cropElements = [];
+        let floatAnimations = [];
+        let pulseAnimations = [];
+        let spotlightIndex = 0;
+        let lastSpotlightTime = 0;
+
+        function initWheel() {
+            const radius = window.innerWidth < 600 ? 120 : 220;
+            const angleStep = 360 / crops.length;
+
+            crops.forEach((crop, i) => {
+                const el = document.createElement('div');
+                el.className = 'crop-item';
+                el.dataset.id = crop.id;
+                el.dataset.index = i;
+                el.innerHTML = `
+                    <div class="crop-item-inner">
+                        <span class="crop-icon">${crop.icon}</span>
+                        <span class="crop-label">${crop.name}<br>${crop.state}</span>
+                    </div>
+                `;
+
+                el.addEventListener('click', () => {
+                    stopSpinAndSelect(crop, el);
+                });
+
+                // Hover pauses spin temporarily
+                el.addEventListener('mouseenter', () => {
+                    if (isSpinning) {
+                        gsap.to(el, { scale: 1.2, duration: 0.3, ease: 'back.out(1.7)' });
+                        spinSpeed = 0.05; // Slow down on hover
+                    }
+                });
+                el.addEventListener('mouseleave', () => {
+                    if (isSpinning) {
+                        gsap.to(el, { scale: 1, duration: 0.3 });
+                        spinSpeed = 0.3; // Resume normal speed
+                    }
+                });
+
+                cropWheel.appendChild(el);
+                cropElements.push({ el, crop, baseAngle: angleStep * i - 90 });
+
+                // Initial entrance animation
+                gsap.fromTo(el,
+                    { opacity: 0, scale: 0 },
+                    {
+                        opacity: 1,
+                        scale: 1,
+                        duration: 1,
+                        delay: 1.5 + i * 0.15,
+                        ease: 'elastic.out(1, 0.4)',
+                        onComplete: () => {
+                            if (i === crops.length - 1) {
+                                // Start auto-rotation after all items appear
+                                setTimeout(startAutoRotation, 500);
+                            }
+                        }
+                    }
+                );
+
+                // Individual floating animation (different timing for each)
+                floatAnimations[i] = gsap.to(el, {
+                    y: '+=15',
+                    duration: 2 + Math.random() * 1,
+                    ease: 'sine.inOut',
+                    yoyo: true,
+                    repeat: -1,
+                    delay: i * 0.2
+                });
+
+                // Subtle pulse on the inner element
+                pulseAnimations[i] = gsap.to(el.querySelector('.crop-item-inner'), {
+                    boxShadow: '0 0 30px rgba(0, 245, 212, 0.4), inset 0 0 20px rgba(0, 245, 212, 0.1)',
+                    duration: 1.5 + Math.random() * 0.5,
+                    ease: 'sine.inOut',
+                    yoyo: true,
+                    repeat: -1,
+                    delay: i * 0.3
+                });
+            });
+        }
+
+        // ===========================================
+        // AUTO-ROTATION ANIMATION LOOP
+        // ===========================================
+        function startAutoRotation() {
+            const radius = window.innerWidth < 600 ? 120 : 220;
+
+            function animate() {
+                if (!isSpinning) return;
+
+                wheelRotation += spinSpeed;
+
+                cropElements.forEach((item, i) => {
+                    const angle = item.baseAngle + wheelRotation;
+                    const rad = (angle * Math.PI) / 180;
+                    const x = Math.cos(rad) * radius;
+                    const y = Math.sin(rad) * radius;
+
+                    // Calculate "featured" position (top of wheel = -90 degrees)
+                    const normalizedAngle = ((angle % 360) + 360) % 360;
+                    const distanceFromTop = Math.abs(normalizedAngle - 270);
+                    const atTop = distanceFromTop < 30 || distanceFromTop > 330;
+
+                    // Scale and glow effect when at featured position
+                    const scale = atTop ? 1.15 : 1;
+                    const zIndex = atTop ? 100 : 10;
+
+                    // 3D depth effect - items at back appear smaller
+                    const depth = Math.sin(rad) * 0.15;
+                    const finalScale = scale + depth;
+
+                    item.el.style.transform = `translate(${x}px, ${y}px) scale(${finalScale})`;
+                    item.el.style.zIndex = zIndex;
+
+                    // Spotlight effect - highlight the featured item
+                    if (atTop && !item.el.classList.contains('spotlight')) {
+                        // Remove spotlight from others
+                        cropElements.forEach(c => c.el.classList.remove('spotlight'));
+                        item.el.classList.add('spotlight');
+
+                        // Update center text to show current spotlight crop
+                        updateSpotlightDisplay(item.crop);
+                    }
+                });
+
+                requestAnimationFrame(animate);
+            }
+
+            animate();
+        }
+
+        // ===========================================
+        // SPOTLIGHT DISPLAY UPDATE
+        // ===========================================
+        function updateSpotlightDisplay(crop) {
+            const now = Date.now();
+            if (now - lastSpotlightTime < 500) return; // Throttle updates
+            lastSpotlightTime = now;
+
+            const prompt = document.getElementById('centerPrompt');
+            const promptText = prompt.querySelector('.center-prompt-text');
+
+            // Animate the text change
+            gsap.to(promptText, {
+                opacity: 0,
+                scale: 0.8,
+                duration: 0.2,
+                onComplete: () => {
+                    promptText.innerHTML = `<span style="color: var(--accent-cyan);">${crop.icon}</span> ${crop.name}`;
+                    gsap.to(promptText, { opacity: 1, scale: 1, duration: 0.3, ease: 'back.out(1.7)' });
+                }
+            });
+        }
+
+        // ===========================================
+        // STOP SPIN AND SELECT
+        // ===========================================
+        function stopSpinAndSelect(crop, element) {
+            if (!isSpinning) {
+                // Already stopped - user is re-selecting a different crop
+                reselectCrop(crop, element);
+                return;
+            }
+
+            isSpinning = false;
+
+            // Kill floating animations
+            floatAnimations.forEach(anim => anim.pause());
+
+            // Epic stop animation - all items zoom to their final position
+            highlightSelectedCrop(crop, element);
+
+            // Trigger confetti burst
+            createSelectionBurst(element);
+
+            // Then proceed with normal selection
+            setTimeout(() => selectCrop(crop), 300);
+        }
+
+        // ===========================================
+        // RE-SELECT A DIFFERENT CROP
+        // ===========================================
+        function reselectCrop(crop, element) {
+            // Animate transition to new selection
+            highlightSelectedCrop(crop, element);
+
+            // Small burst for re-selection
+            createSelectionBurst(element);
+
+            // Update selection
+            setTimeout(() => selectCrop(crop), 200);
+        }
+
+        // ===========================================
+        // HIGHLIGHT SELECTED CROP (shared logic)
+        // ===========================================
+        function highlightSelectedCrop(crop, element) {
+            cropElements.forEach((item, i) => {
+                const isSelected = item.crop.id === crop.id;
+
+                // Reset any previous selection styling
+                gsap.to(item.el, {
+                    scale: isSelected ? 1.3 : 0.95,
+                    opacity: isSelected ? 1 : 0.6,
+                    filter: isSelected ? 'grayscale(0%)' : 'grayscale(40%)',
+                    boxShadow: isSelected ? '0 0 80px rgba(254, 228, 64, 0.8)' : 'none',
+                    duration: 0.5,
+                    ease: 'elastic.out(1, 0.6)'
+                });
+
+                // Add/remove selected class
+                if (isSelected) {
+                    item.el.classList.add('selected');
+                    item.el.classList.remove('spotlight');
+                } else {
+                    item.el.classList.remove('selected');
+                    item.el.classList.remove('spotlight');
+                }
+            });
+        }
+
+        // ===========================================
+        // SELECTION BURST EFFECT
+        // ===========================================
+        function createSelectionBurst(element) {
+            const rect = element.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+
+            for (let i = 0; i < 20; i++) {
+                const particle = document.createElement('div');
+                particle.style.cssText = `
+                    position: fixed;
+                    width: 8px;
+                    height: 8px;
+                    background: linear-gradient(135deg, var(--accent-yellow), var(--accent-orange));
+                    border-radius: 50%;
+                    pointer-events: none;
+                    z-index: 9999;
+                    left: ${centerX}px;
+                    top: ${centerY}px;
+                `;
+                document.body.appendChild(particle);
+
+                const angle = (i / 20) * Math.PI * 2;
+                const distance = 100 + Math.random() * 100;
+
+                gsap.to(particle, {
+                    x: Math.cos(angle) * distance,
+                    y: Math.sin(angle) * distance,
+                    opacity: 0,
+                    scale: 0,
+                    duration: 0.8 + Math.random() * 0.4,
+                    ease: 'power2.out',
+                    onComplete: () => particle.remove()
+                });
+            }
+        }
+
+        // ===========================================
+        // SELECT CROP
+        // ===========================================
+        function selectCrop(crop) {
+            document.querySelectorAll('.crop-item').forEach(el => el.classList.remove('selected'));
+            document.querySelector(`[data-id="${crop.id}"]`).classList.add('selected');
+
+            selectedCrop = crop;
+
+            // Update center display with GSAP
+            const prompt = document.getElementById('centerPrompt');
+            const display = document.getElementById('selectedDisplay');
+            const nameEl = document.getElementById('selectedName');
+            const stateEl = document.getElementById('selectedState');
+
+            gsap.to(prompt, { opacity: 0, scale: 0.8, duration: 0.3 });
+
+            nameEl.textContent = crop.name;
+            stateEl.textContent = crop.state;
+
+            gsap.fromTo(display,
+                { opacity: 0, scale: 0.8 },
+                { opacity: 1, scale: 1, duration: 0.5, delay: 0.2, ease: 'back.out(1.7)' }
+            );
+            display.classList.add('active');
+
+            // Animate input cards
+            showInputCards(crop);
+
+            // Show calculate button
+            gsap.to(calcButton, { opacity: 1, y: 0, duration: 0.5, delay: 0.5, onStart: () => {
+                calcButton.classList.add('visible');
+            }});
+
+            // Hide result
+            document.getElementById('rentResult').classList.remove('visible');
+            document.getElementById('ctaSection').classList.remove('visible');
+        }
+
+        // ===========================================
+        // SHOW INPUT CARDS WITH GSAP
+        // ===========================================
+        function showInputCards(crop) {
+            const cards = document.querySelectorAll('.input-card');
+            const values = [
+                { el: 'priceValue', val: crop.price, prefix: '$' },
+                { el: 'yieldValue', val: crop.yield, prefix: '' },
+                { el: 'costValue', val: crop.cost, prefix: '$' },
+                { el: 'highValue', val: crop.high, prefix: '' },
+                { el: 'avgValue', val: crop.avg, prefix: '' }
+            ];
+
+            cards.forEach((card, i) => {
+                gsap.to(card, {
+                    opacity: 1,
+                    y: 0,
+                    rotateX: 0,
+                    duration: 0.6,
+                    delay: i * 0.1,
+                    ease: 'back.out(1.7)',
+                    onStart: () => card.classList.add('visible')
+                });
+
+                // Shimmer effect
+                setTimeout(() => card.classList.add('shimmer'), i * 100 + 200);
+                setTimeout(() => card.classList.remove('shimmer'), i * 100 + 700);
+            });
+
+            // Animate values with Anime.js
+            values.forEach((item, i) => {
+                setTimeout(() => {
+                    anime({
+                        targets: { val: 0 },
+                        val: item.val,
+                        duration: 1000,
+                        easing: 'easeOutExpo',
+                        round: 1,
+                        update: (anim) => {
+                            document.getElementById(item.el).textContent =
+                                item.prefix + Math.round(anim.animations[0].currentValue).toLocaleString();
+                        }
+                    });
+                }, i * 100 + 300);
+            });
+        }
+
+        // ===========================================
+        // CALCULATE RENT
+        // ===========================================
+        calcButton.addEventListener('click', async () => {
+            if (!selectedCrop) return;
+
+            calcButton.classList.add('calculating');
+
+            // Simulate API call
+            await new Promise(r => setTimeout(r, 2000));
+
+            const rent = Math.max(0, (selectedCrop.price * selectedCrop.yield / 100 - selectedCrop.cost) * 0.35);
+
+            showResult(rent);
+            calcButton.classList.remove('calculating');
+        });
+
+        // ===========================================
+        // SHOW RESULT WITH EPIC ANIMATION
+        // ===========================================
+        function showResult(amount) {
+            const result = document.getElementById('rentResult');
+            const valueEl = document.getElementById('rentValue');
+            const glowEl = document.getElementById('rentGlow');
+
+            // Play win sound
+            playWinSound();
+
+            // Show result container with 3D animation
+            result.classList.add('visible');
+
+            // Create particle burst
+            createParticleBurst();
+
+            // Animate the number
+            anime({
+                targets: { val: 0 },
+                val: amount,
+                duration: 2000,
+                easing: 'easeOutExpo',
+                update: (anim) => {
+                    const current = '$' + anim.animations[0].currentValue.toFixed(2);
+                    valueEl.textContent = current;
+                    glowEl.textContent = current;
+                }
+            });
+
+            // Show CTA
+            setTimeout(() => {
+                document.getElementById('ctaSection').classList.add('visible');
+            }, 1500);
+        }
+
+        // ===========================================
+        // PARTICLE BURST
+        // ===========================================
+        function createParticleBurst() {
+            const container = document.getElementById('particleBurst');
+            const colors = ['#00f5d4', '#9b5de5', '#f15bb5', '#fee440', '#ff6b35'];
+
+            for (let i = 0; i < 60; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+                container.appendChild(particle);
+
+                const angle = Math.random() * Math.PI * 2;
+                const velocity = 100 + Math.random() * 200;
+                const x = Math.cos(angle) * velocity;
+                const y = Math.sin(angle) * velocity;
+
+                gsap.fromTo(particle,
+                    { x: 0, y: 0, scale: 1, opacity: 1 },
+                    {
+                        x: x,
+                        y: y,
+                        scale: 0,
+                        opacity: 0,
+                        duration: 1 + Math.random() * 0.5,
+                        ease: 'power2.out',
+                        onComplete: () => particle.remove()
+                    }
+                );
+            }
+        }
+
+        // ===========================================
+        // WIN SOUND
+        // ===========================================
+        function playWinSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.frequency.value = freq;
+                    const t = ctx.currentTime + i * 0.08;
+                    gain.gain.setValueAtTime(0.12, t);
+                    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
+                    osc.start(t);
+                    osc.stop(t + 0.3);
+                });
+            } catch (e) {}
+        }
+
+        // ===========================================
+        // INIT
+        // ===========================================
+        initWheel();
+    </script>
+</body>
+</html>

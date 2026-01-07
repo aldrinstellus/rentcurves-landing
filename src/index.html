@@ -1,0 +1,2686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rent Curves - Calculate Your Crop Rent Instantly</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Core palette */
+            --midnight: #030806;
+            --forest-deep: #071410;
+            --forest: #0d261e;
+            --emerald: #059669;
+            --emerald-light: #10b981;
+            --emerald-glow: #34d399;
+
+            /* Gold spectrum */
+            --gold-dark: #92400e;
+            --gold: #d97706;
+            --gold-bright: #f59e0b;
+            --gold-light: #fbbf24;
+
+            /* Neutrals */
+            --cream: #fef7ed;
+            --cream-muted: #f5ebe0;
+            --sage: #6b8068;
+            --sage-light: #9caa98;
+
+            /* Effects */
+            --glow-emerald: 0 0 60px rgba(16, 185, 129, 0.4);
+            --glow-gold: 0 0 80px rgba(251, 191, 36, 0.5);
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--midnight);
+            min-height: 100vh;
+            color: var(--cream);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ========================================
+           ATMOSPHERIC BACKGROUND
+        ======================================== */
+        .atmosphere {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .gradient-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.5;
+            animation: float-orb 20s ease-in-out infinite;
+        }
+
+        .gradient-orb--emerald {
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(5, 150, 105, 0.3) 0%, transparent 70%);
+            top: -200px;
+            left: -100px;
+            animation-delay: 0s;
+        }
+
+        .gradient-orb--gold {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(217, 119, 6, 0.2) 0%, transparent 70%);
+            bottom: -150px;
+            right: -100px;
+            animation-delay: -10s;
+        }
+
+        .gradient-orb--sage {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(107, 128, 104, 0.2) 0%, transparent 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation-delay: -5s;
+        }
+
+        @keyframes float-orb {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.05); }
+            66% { transform: translate(-20px, 20px) scale(0.95); }
+        }
+
+        /* Grain overlay */
+        .grain {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0.03;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+        }
+
+        /* Floating seeds/particles */
+        .seeds-container {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .seed {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: var(--emerald-light);
+            border-radius: 50%;
+            opacity: 0;
+            animation: drift 25s linear infinite;
+        }
+
+        .seed::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: inherit;
+            border-radius: inherit;
+            filter: blur(2px);
+            transform: scale(2);
+            opacity: 0.5;
+        }
+
+        @keyframes drift {
+            0% {
+                transform: translateY(100vh) translateX(0) rotate(0deg);
+                opacity: 0;
+            }
+            5% { opacity: 0.6; }
+            95% { opacity: 0.6; }
+            100% {
+                transform: translateY(-100px) translateX(100px) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        /* ========================================
+           HEADER
+        ======================================== */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 1.25rem 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(to bottom, rgba(3, 8, 6, 0.95) 0%, transparent 100%);
+            backdrop-filter: blur(20px);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+        }
+
+        .logo-mark {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, var(--emerald) 0%, var(--emerald-light) 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 20px rgba(5, 150, 105, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .logo-mark::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.2) 50%, transparent 60%);
+            transform: translateX(-100%);
+            animation: logo-shine 3s ease-in-out infinite;
+        }
+
+        @keyframes logo-shine {
+            0%, 100% { transform: translateX(-100%); }
+            50% { transform: translateX(100%); }
+        }
+
+        .logo-mark svg {
+            width: 26px;
+            height: 26px;
+        }
+
+        .logo-text {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.5rem;
+            letter-spacing: -0.02em;
+            color: var(--cream);
+        }
+
+        .logo-text span {
+            color: var(--emerald-light);
+        }
+
+        .nav {
+            display: flex;
+            align-items: center;
+            gap: 2.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--sage-light);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--emerald-light);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--cream);
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .btn-header {
+            padding: 0.7rem 1.5rem;
+            background: transparent;
+            border: 1.5px solid var(--emerald);
+            color: var(--emerald-light);
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-header:hover {
+            background: var(--emerald);
+            color: var(--midnight);
+            box-shadow: var(--glow-emerald);
+            transform: translateY(-2px);
+        }
+
+        /* ========================================
+           HERO SECTION
+        ======================================== */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 8rem 2rem 4rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 100px;
+            font-size: 0.85rem;
+            color: var(--sage-light);
+            margin-bottom: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .hero-tag svg {
+            width: 16px;
+            height: 16px;
+            color: var(--emerald-light);
+        }
+
+        .hero-title {
+            font-family: 'DM Serif Display', serif;
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 400;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+            margin-bottom: 1rem;
+        }
+
+        .hero-title .accent {
+            color: var(--gold-bright);
+            font-style: italic;
+        }
+
+        .hero-subtitle {
+            font-size: 1.15rem;
+            color: var(--sage-light);
+            max-width: 480px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        /* Instruction pill */
+        .instruction {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, rgba(5, 150, 105, 0.15) 0%, rgba(16, 185, 129, 0.1) 100%);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 100px;
+            margin-bottom: 3rem;
+            animation: pulse-soft 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse-soft {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+            50% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0.1); }
+        }
+
+        .instruction-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--emerald);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .instruction-icon svg {
+            width: 16px;
+            height: 16px;
+            color: white;
+        }
+
+        .instruction-text {
+            font-size: 0.95rem;
+            color: var(--cream);
+            font-weight: 500;
+        }
+
+        /* ========================================
+           CROP WHEEL - THE STAR
+        ======================================== */
+        .wheel-section {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .wheel-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1;
+            max-width: 580px;
+            margin: 0 auto;
+        }
+
+        /* Decorative ring */
+        .wheel-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 85%;
+            height: 85%;
+            transform: translate(-50%, -50%);
+            border: 1px dashed rgba(16, 185, 129, 0.2);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .wheel-ring::before {
+            content: '';
+            position: absolute;
+            inset: -20px;
+            border: 1px solid rgba(16, 185, 129, 0.1);
+            border-radius: 50%;
+        }
+
+        /* Center display */
+        .center-display {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .center-glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(5, 150, 105, 0.2) 0%, transparent 70%);
+            border-radius: 50%;
+            filter: blur(30px);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .center-glow.active {
+            opacity: 1;
+        }
+
+        .selected-crop-name {
+            font-family: 'DM Serif Display', serif;
+            font-size: clamp(2.5rem, 7vw, 5rem);
+            font-weight: 400;
+            color: var(--cream);
+            opacity: 0;
+            transform: translateY(20px) scale(0.9);
+            transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            text-shadow: 0 0 60px rgba(16, 185, 129, 0.5);
+        }
+
+        .selected-crop-name.active {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .selected-crop-state {
+            font-size: 1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3em;
+            color: var(--emerald-light);
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.5s ease 0.15s;
+        }
+
+        .selected-crop-state.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Prompt when no crop selected */
+        .center-prompt {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            transition: opacity 0.5s ease;
+        }
+
+        .center-prompt.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .center-prompt-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 1rem;
+            border: 2px dashed var(--sage);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: rotate-slow 20s linear infinite;
+        }
+
+        @keyframes rotate-slow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .center-prompt-icon svg {
+            width: 28px;
+            height: 28px;
+            color: var(--sage);
+            animation: rotate-slow 20s linear infinite reverse;
+        }
+
+        .center-prompt-text {
+            color: var(--sage);
+            font-size: 0.9rem;
+        }
+
+        /* Crop wheel */
+        .crop-wheel {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transition: transform 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        /* Individual crop items */
+        .crop-item {
+            position: absolute;
+            width: 130px;
+            height: 130px;
+            left: 50%;
+            top: 50%;
+            margin-left: -65px;
+            margin-top: -65px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .crop-item-inner {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(145deg, rgba(13, 38, 30, 0.9) 0%, rgba(7, 20, 16, 0.95) 100%);
+            border: 2px solid rgba(16, 185, 129, 0.2);
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.35rem;
+            padding: 1rem;
+            backdrop-filter: blur(10px);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .crop-item-inner::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.1) 0%, transparent 50%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .crop-item:hover .crop-item-inner {
+            border-color: var(--emerald-light);
+            transform: scale(1.08);
+            box-shadow: 0 0 40px rgba(16, 185, 129, 0.3), inset 0 0 20px rgba(16, 185, 129, 0.1);
+        }
+
+        .crop-item:hover .crop-item-inner::before {
+            opacity: 1;
+        }
+
+        .crop-item.selected .crop-item-inner {
+            border-color: var(--gold-bright);
+            background: linear-gradient(145deg, rgba(146, 64, 14, 0.3) 0%, rgba(13, 38, 30, 0.9) 100%);
+            box-shadow: 0 0 50px rgba(251, 191, 36, 0.4), inset 0 0 30px rgba(251, 191, 36, 0.1);
+        }
+
+        .crop-icon {
+            font-size: 2.5rem;
+            filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
+            transition: transform 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .crop-item:hover .crop-icon {
+            transform: scale(1.1);
+        }
+
+        .crop-label {
+            font-size: 0.68rem;
+            font-weight: 600;
+            color: var(--sage-light);
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            line-height: 1.35;
+            transition: color 0.3s ease;
+        }
+
+        .crop-item:hover .crop-label {
+            color: var(--cream);
+        }
+
+        .crop-item.selected .crop-label {
+            color: var(--gold-light);
+        }
+
+        /* ========================================
+           INPUT CARDS - FLOATING DATA
+        ======================================== */
+        .inputs-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .input-card {
+            position: absolute;
+            background: linear-gradient(145deg, rgba(13, 38, 30, 0.95) 0%, rgba(7, 20, 16, 0.98) 100%);
+            border: 1px solid rgba(16, 185, 129, 0.15);
+            border-radius: 16px;
+            padding: 1rem 1.25rem;
+            backdrop-filter: blur(20px);
+            min-width: 110px;
+            text-align: center;
+            opacity: 0;
+            transform: scale(0.8) translateY(30px);
+            transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        .input-card.visible {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+
+        .input-card.shimmer::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: linear-gradient(90deg, transparent, rgba(251, 191, 36, 0.3), transparent);
+            animation: shimmer-sweep 1.5s ease-out;
+        }
+
+        @keyframes shimmer-sweep {
+            0% { transform: translateX(-100%); opacity: 1; }
+            100% { transform: translateX(100%); opacity: 0; }
+        }
+
+        .input-icon-wrap {
+            width: 44px;
+            height: 44px;
+            margin: 0 auto 0.6rem;
+            background: linear-gradient(135deg, var(--emerald) 0%, var(--emerald-light) 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(5, 150, 105, 0.3);
+        }
+
+        .input-icon {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .input-label {
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: var(--sage);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.3rem;
+        }
+
+        .input-value {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.6rem;
+            color: var(--cream);
+            font-weight: 400;
+        }
+
+        /* Position input cards - horizontal row below wheel */
+        .inputs-container {
+            position: relative;
+            width: 100%;
+            height: auto;
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .input-card {
+            position: relative;
+            top: auto;
+            left: auto;
+            right: auto;
+            bottom: auto;
+        }
+
+        /* ========================================
+           CALCULATE BUTTON
+        ======================================== */
+        .calc-section {
+            margin-top: 3rem;
+            text-align: center;
+        }
+
+        .calc-button {
+            position: relative;
+            background: linear-gradient(135deg, var(--emerald) 0%, var(--emerald-light) 100%);
+            border: none;
+            color: white;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.15rem;
+            font-weight: 600;
+            padding: 1.25rem 3rem;
+            border-radius: 100px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            opacity: 0;
+            transform: translateY(30px);
+            pointer-events: none;
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            overflow: hidden;
+        }
+
+        .calc-button::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.5s ease;
+        }
+
+        .calc-button:hover::before {
+            transform: translateX(100%);
+        }
+
+        .calc-button.visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: all;
+        }
+
+        .calc-button:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 50px rgba(5, 150, 105, 0.4);
+        }
+
+        .calc-button:active {
+            transform: translateY(-2px);
+        }
+
+        .calc-button.calculating {
+            pointer-events: none;
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-bright) 100%);
+        }
+
+        .gear-icon {
+            width: 24px;
+            height: 24px;
+            transition: transform 0.3s ease;
+        }
+
+        .calc-button:hover .gear-icon {
+            transform: rotate(90deg);
+        }
+
+        .calc-button.calculating .gear-icon {
+            animation: spin-fast 0.6s linear infinite;
+        }
+
+        @keyframes spin-fast {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* ========================================
+           RENT RESULT - THE GRAND REVEAL
+        ======================================== */
+        .result-section {
+            margin-top: 3rem;
+            text-align: center;
+            perspective: 1000px;
+        }
+
+        .rent-result {
+            opacity: 0;
+            transform: translateY(40px) rotateX(-20deg);
+            transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .rent-result.visible {
+            opacity: 1;
+            transform: translateY(0) rotateX(0);
+        }
+
+        .rent-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--sage);
+            text-transform: uppercase;
+            letter-spacing: 0.25em;
+            margin-bottom: 0.75rem;
+        }
+
+        .rent-value-wrap {
+            position: relative;
+            display: inline-block;
+        }
+
+        .rent-value {
+            font-family: 'DM Serif Display', serif;
+            font-size: clamp(4rem, 12vw, 8rem);
+            font-weight: 400;
+            background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 50%, var(--gold-dark) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            position: relative;
+            z-index: 2;
+        }
+
+        .rent-value-glow {
+            position: absolute;
+            inset: 0;
+            font-family: 'DM Serif Display', serif;
+            font-size: clamp(4rem, 12vw, 8rem);
+            font-weight: 400;
+            color: var(--gold-bright);
+            filter: blur(40px);
+            opacity: 0.6;
+            z-index: 1;
+            animation: glow-pulse 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow-pulse {
+            from { opacity: 0.4; filter: blur(30px); }
+            to { opacity: 0.7; filter: blur(50px); }
+        }
+
+        .rent-unit {
+            font-size: 1rem;
+            color: var(--sage-light);
+            margin-top: 0.5rem;
+            font-weight: 500;
+        }
+
+        /* Casino-style sparkles around rent value */
+        .rent-sparkles {
+            position: absolute;
+            inset: -40px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .rent-result.visible .rent-sparkles {
+            opacity: 1;
+        }
+
+        .sparkle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: var(--gold-bright);
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+            animation: sparkle-twinkle 1.5s ease-in-out infinite;
+        }
+
+        .sparkle:nth-child(1) { top: 10%; left: 5%; animation-delay: 0s; }
+        .sparkle:nth-child(2) { top: 5%; right: 10%; animation-delay: 0.3s; }
+        .sparkle:nth-child(3) { bottom: 15%; left: 10%; animation-delay: 0.6s; }
+        .sparkle:nth-child(4) { bottom: 10%; right: 5%; animation-delay: 0.9s; }
+        .sparkle:nth-child(5) { top: 50%; left: 0%; animation-delay: 0.2s; }
+        .sparkle:nth-child(6) { top: 50%; right: 0%; animation-delay: 0.5s; }
+
+        @keyframes sparkle-twinkle {
+            0%, 100% { transform: scale(0.5) rotate(0deg); opacity: 0.3; }
+            50% { transform: scale(1.2) rotate(180deg); opacity: 1; }
+        }
+
+        /* Dramatic slot-machine style reveal */
+        .rent-result.revealing .rent-value {
+            animation: slot-reveal 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes slot-reveal {
+            0% { transform: translateY(-30px) scale(0.8); opacity: 0; }
+            50% { transform: translateY(10px) scale(1.1); }
+            100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
+
+        /* Winner banner effect */
+        .rent-winner-banner {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-bright) 50%, var(--gold-light) 100%);
+            color: var(--midnight);
+            padding: 0.4rem 1.5rem;
+            border-radius: 100px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            opacity: 0;
+            transform: translateX(-50%) translateY(10px);
+            transition: all 0.5s ease 0.3s;
+            box-shadow: 0 4px 20px rgba(251, 191, 36, 0.4);
+        }
+
+        .rent-result.visible .rent-winner-banner {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Celebration particles */
+        .celebration {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 1000;
+            overflow: hidden;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            opacity: 0;
+        }
+
+        /* Casino-style light rays behind rent */
+        .rent-rays {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 400px;
+            height: 400px;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.8s ease;
+        }
+
+        .rent-result.visible .rent-rays {
+            opacity: 1;
+        }
+
+        .rent-rays::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: conic-gradient(
+                from 0deg,
+                transparent 0deg,
+                rgba(251, 191, 36, 0.1) 10deg,
+                transparent 20deg,
+                transparent 30deg,
+                rgba(251, 191, 36, 0.1) 40deg,
+                transparent 50deg,
+                transparent 60deg,
+                rgba(251, 191, 36, 0.1) 70deg,
+                transparent 80deg,
+                transparent 90deg,
+                rgba(251, 191, 36, 0.1) 100deg,
+                transparent 110deg,
+                transparent 120deg,
+                rgba(251, 191, 36, 0.1) 130deg,
+                transparent 140deg,
+                transparent 150deg,
+                rgba(251, 191, 36, 0.1) 160deg,
+                transparent 170deg,
+                transparent 180deg,
+                rgba(251, 191, 36, 0.1) 190deg,
+                transparent 200deg,
+                transparent 210deg,
+                rgba(251, 191, 36, 0.1) 220deg,
+                transparent 230deg,
+                transparent 240deg,
+                rgba(251, 191, 36, 0.1) 250deg,
+                transparent 260deg,
+                transparent 270deg,
+                rgba(251, 191, 36, 0.1) 280deg,
+                transparent 290deg,
+                transparent 300deg,
+                rgba(251, 191, 36, 0.1) 310deg,
+                transparent 320deg,
+                transparent 330deg,
+                rgba(251, 191, 36, 0.1) 340deg,
+                transparent 350deg,
+                transparent 360deg
+            );
+            border-radius: 50%;
+            animation: rotate-rays 20s linear infinite;
+        }
+
+        @keyframes rotate-rays {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* ========================================
+           CTA SECTION
+        ======================================== */
+        .cta-section {
+            margin-top: 3rem;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease 0.3s;
+        }
+
+        .cta-section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .cta-main {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1.25rem 2.5rem;
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-bright) 100%);
+            color: var(--midnight);
+            font-size: 1.1rem;
+            font-weight: 700;
+            text-decoration: none;
+            border-radius: 100px;
+            transition: all 0.4s ease;
+            box-shadow: 0 10px 40px rgba(217, 119, 6, 0.3);
+        }
+
+        .cta-main:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 20px 60px rgba(217, 119, 6, 0.4);
+        }
+
+        .cta-main svg {
+            width: 20px;
+            height: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .cta-main:hover svg {
+            transform: translateX(4px);
+        }
+
+        .cta-sub {
+            display: block;
+            margin-top: 1rem;
+            color: var(--sage);
+            font-size: 0.9rem;
+        }
+
+        /* ========================================
+           RESPONSIVE - COMPREHENSIVE
+        ======================================== */
+
+        /* Mobile Menu Toggle */
+        .mobile-menu-toggle {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            gap: 5px;
+            width: 32px;
+            height: 32px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            z-index: 200;
+        }
+
+        .mobile-menu-toggle span {
+            display: block;
+            width: 100%;
+            height: 2px;
+            background: var(--cream);
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-menu-toggle.active span:nth-child(1) {
+            transform: rotate(45deg) translate(5px, 5px);
+        }
+
+        .mobile-menu-toggle.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .mobile-menu-toggle.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(5px, -5px);
+        }
+
+        /* Mobile Navigation Overlay */
+        .mobile-nav {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(3, 8, 6, 0.98);
+            backdrop-filter: blur(20px);
+            z-index: 150;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .mobile-nav.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .mobile-nav a {
+            color: var(--cream);
+            text-decoration: none;
+            font-size: 1.5rem;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .mobile-nav a:hover {
+            color: var(--emerald-light);
+        }
+
+        .mobile-nav .btn-header {
+            font-size: 1.2rem;
+            padding: 1rem 2rem;
+        }
+
+        /* ===== LARGE DESKTOP (1400px+) ===== */
+        @media (min-width: 1400px) {
+            .hero {
+                padding: 10rem 4rem 6rem;
+            }
+
+            .wheel-section {
+                max-width: 900px;
+            }
+
+            .wheel-container {
+                max-width: 580px;
+            }
+
+            .inputs-container {
+                gap: 1.5rem;
+            }
+
+            .input-card {
+                padding: 1.25rem 1.5rem;
+                min-width: 130px;
+            }
+        }
+
+        /* ===== DESKTOP (1024px - 1399px) ===== */
+        @media (max-width: 1399px) and (min-width: 1024px) {
+            .header {
+                padding: 1rem 2.5rem;
+            }
+
+            .nav-links {
+                gap: 1.5rem;
+            }
+        }
+
+        /* ===== TABLET LANDSCAPE (900px - 1023px) ===== */
+        @media (max-width: 1023px) and (min-width: 900px) {
+            .header {
+                padding: 1rem 2rem;
+            }
+
+            .nav-links {
+                gap: 1.25rem;
+            }
+
+            .nav-links a {
+                font-size: 0.85rem;
+            }
+
+            .wheel-container {
+                max-width: 520px;
+            }
+
+            .crop-item {
+                width: 115px;
+                height: 115px;
+                margin-left: -57.5px;
+                margin-top: -57.5px;
+            }
+
+            .crop-item-inner {
+                gap: 0.3rem;
+                padding: 0.85rem;
+            }
+
+            .crop-icon {
+                font-size: 2.2rem;
+            }
+
+            .crop-label {
+                font-size: 0.62rem;
+            }
+
+            .input-card {
+                padding: 0.85rem 1.1rem;
+                min-width: 100px;
+            }
+        }
+
+        /* ===== TABLET PORTRAIT (768px - 899px) ===== */
+        @media (max-width: 899px) {
+            .mobile-menu-toggle {
+                display: flex;
+            }
+
+            .mobile-nav {
+                display: flex;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .header {
+                padding: 1rem 1.5rem;
+            }
+
+            .hero {
+                padding: 7rem 1.5rem 4rem;
+            }
+
+            .hero-title {
+                font-size: clamp(2.2rem, 5.5vw, 3.5rem);
+            }
+
+            .hero-subtitle {
+                font-size: 1rem;
+                padding: 0 1rem;
+            }
+
+            .wheel-section {
+                max-width: 100%;
+                padding: 0 1rem;
+            }
+
+            .wheel-container {
+                max-width: 460px;
+            }
+
+            .crop-item {
+                width: 105px;
+                height: 105px;
+                margin-left: -52.5px;
+                margin-top: -52.5px;
+            }
+
+            .crop-item-inner {
+                gap: 0.25rem;
+                padding: 0.75rem;
+            }
+
+            .crop-icon {
+                font-size: 2rem;
+            }
+
+            .crop-label {
+                font-size: 0.58rem;
+            }
+
+            .inputs-container {
+                gap: 0.75rem;
+                margin-top: 1.5rem;
+                padding: 0 0.5rem;
+            }
+
+            .input-card {
+                padding: 0.75rem 1rem;
+                min-width: 95px;
+            }
+
+            .input-icon-wrap {
+                width: 38px;
+                height: 38px;
+            }
+
+            .input-value {
+                font-size: 1.35rem;
+            }
+
+            .input-label {
+                font-size: 0.6rem;
+            }
+
+            .calc-section {
+                margin-top: 2.5rem;
+            }
+
+            .calc-button {
+                padding: 1.1rem 2.5rem;
+                font-size: 1.05rem;
+            }
+
+            .rent-value {
+                font-size: clamp(3.5rem, 10vw, 6rem);
+            }
+
+            .rent-value-glow {
+                font-size: clamp(3.5rem, 10vw, 6rem);
+            }
+
+            .cta-main {
+                padding: 1.1rem 2rem;
+                font-size: 1rem;
+            }
+        }
+
+        /* ===== MOBILE LARGE (600px - 767px) ===== */
+        @media (max-width: 767px) {
+            .hero {
+                padding: 6.5rem 1.25rem 3.5rem;
+            }
+
+            .hero-tag {
+                font-size: 0.8rem;
+                padding: 0.4rem 0.85rem;
+            }
+
+            .hero-title {
+                font-size: clamp(2rem, 7vw, 2.8rem);
+            }
+
+            .hero-subtitle {
+                font-size: 0.95rem;
+            }
+
+            .instruction {
+                padding: 0.6rem 1.25rem;
+                margin-bottom: 2rem;
+            }
+
+            .instruction-icon {
+                width: 28px;
+                height: 28px;
+            }
+
+            .instruction-text {
+                font-size: 0.88rem;
+            }
+
+            .wheel-container {
+                max-width: 380px;
+            }
+
+            .crop-item {
+                width: 90px;
+                height: 90px;
+                margin-left: -45px;
+                margin-top: -45px;
+            }
+
+            .crop-item-inner {
+                gap: 0.2rem;
+                padding: 0.6rem;
+            }
+
+            .crop-icon {
+                font-size: 1.75rem;
+            }
+
+            .crop-label {
+                font-size: 0.52rem;
+            }
+
+            .selected-crop-name {
+                font-size: clamp(2rem, 8vw, 3rem);
+            }
+
+            .selected-crop-state {
+                font-size: 0.85rem;
+            }
+
+            .inputs-container {
+                gap: 0.6rem;
+                justify-content: center;
+            }
+
+            .input-card {
+                padding: 0.65rem 0.9rem;
+                min-width: 85px;
+                border-radius: 12px;
+            }
+
+            .input-icon-wrap {
+                width: 34px;
+                height: 34px;
+                border-radius: 9px;
+                margin-bottom: 0.4rem;
+            }
+
+            .input-icon {
+                font-size: 0.95rem;
+            }
+
+            .input-value {
+                font-size: 1.2rem;
+            }
+
+            .input-label {
+                font-size: 0.55rem;
+            }
+
+            .calc-button {
+                padding: 1rem 2rem;
+                font-size: 1rem;
+            }
+
+            .gear-icon {
+                width: 20px;
+                height: 20px;
+            }
+
+            .result-section {
+                margin-top: 2.5rem;
+            }
+
+            .rent-label {
+                font-size: 0.75rem;
+                letter-spacing: 0.2em;
+            }
+
+            .rent-value {
+                font-size: clamp(3rem, 12vw, 5rem);
+            }
+
+            .rent-value-glow {
+                font-size: clamp(3rem, 12vw, 5rem);
+            }
+
+            .rent-unit {
+                font-size: 0.9rem;
+            }
+
+            .cta-section {
+                margin-top: 2.5rem;
+            }
+
+            .cta-main {
+                padding: 1rem 1.75rem;
+                font-size: 0.95rem;
+            }
+
+            .cta-sub {
+                font-size: 0.85rem;
+            }
+        }
+
+        /* ===== MOBILE MEDIUM (480px - 599px) ===== */
+        @media (max-width: 599px) {
+            .header {
+                padding: 0.9rem 1rem;
+            }
+
+            .logo-mark {
+                width: 38px;
+                height: 38px;
+            }
+
+            .logo-text {
+                font-size: 1.3rem;
+            }
+
+            .hero {
+                padding: 6rem 1rem 3rem;
+            }
+
+            .wheel-container {
+                max-width: 330px;
+            }
+
+            .crop-item {
+                width: 78px;
+                height: 78px;
+                margin-left: -39px;
+                margin-top: -39px;
+            }
+
+            .crop-item-inner {
+                gap: 0.15rem;
+                padding: 0.5rem;
+            }
+
+            .crop-icon {
+                font-size: 1.5rem;
+            }
+
+            .crop-label {
+                font-size: 0.46rem;
+                line-height: 1.2;
+            }
+
+            .center-prompt-icon {
+                width: 50px;
+                height: 50px;
+            }
+
+            .center-prompt-icon svg {
+                width: 22px;
+                height: 22px;
+            }
+
+            .center-prompt-text {
+                font-size: 0.8rem;
+            }
+
+            .inputs-container {
+                gap: 0.5rem;
+                margin-top: 1.25rem;
+            }
+
+            .input-card {
+                padding: 0.55rem 0.75rem;
+                min-width: 58px;
+                flex: 0 0 calc(33.333% - 0.4rem);
+                max-width: calc(33.333% - 0.4rem);
+            }
+
+            .input-icon-wrap {
+                width: 30px;
+                height: 30px;
+                border-radius: 8px;
+            }
+
+            .input-icon {
+                font-size: 0.85rem;
+            }
+
+            .input-value {
+                font-size: 1rem;
+            }
+
+            .input-label {
+                font-size: 0.5rem;
+                margin-bottom: 0.2rem;
+            }
+
+            .calc-section {
+                margin-top: 2rem;
+            }
+
+            .calc-button {
+                padding: 0.9rem 1.75rem;
+                font-size: 0.95rem;
+                gap: 0.5rem;
+            }
+
+            .result-section {
+                margin-top: 2rem;
+            }
+
+            .rent-value {
+                font-size: clamp(2.5rem, 14vw, 4rem);
+            }
+
+            .rent-value-glow {
+                font-size: clamp(2.5rem, 14vw, 4rem);
+            }
+
+            .cta-main {
+                padding: 0.9rem 1.5rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* ===== MOBILE SMALL (< 480px) ===== */
+        @media (max-width: 479px) {
+            .hero {
+                padding: 5.5rem 0.75rem 2.5rem;
+                min-height: auto;
+            }
+
+            .hero-header {
+                margin-bottom: 1rem;
+            }
+
+            .hero-tag {
+                font-size: 0.72rem;
+                padding: 0.35rem 0.75rem;
+                margin-bottom: 1rem;
+            }
+
+            .hero-title {
+                font-size: clamp(1.75rem, 8vw, 2.2rem);
+                margin-bottom: 0.75rem;
+            }
+
+            .hero-subtitle {
+                font-size: 0.88rem;
+                line-height: 1.5;
+            }
+
+            .instruction {
+                padding: 0.5rem 1rem;
+                margin-bottom: 1.5rem;
+                gap: 0.5rem;
+            }
+
+            .instruction-icon {
+                width: 26px;
+                height: 26px;
+            }
+
+            .instruction-icon svg {
+                width: 14px;
+                height: 14px;
+            }
+
+            .instruction-text {
+                font-size: 0.82rem;
+            }
+
+            .wheel-container {
+                max-width: 290px;
+            }
+
+            .wheel-ring {
+                width: 90%;
+                height: 90%;
+            }
+
+            .wheel-ring::before {
+                inset: -15px;
+            }
+
+            .crop-item {
+                width: 68px;
+                height: 68px;
+                margin-left: -34px;
+                margin-top: -34px;
+            }
+
+            .crop-item-inner {
+                border-width: 1.5px;
+                gap: 0.1rem;
+                padding: 0.4rem;
+            }
+
+            .crop-icon {
+                font-size: 1.3rem;
+            }
+
+            .crop-label {
+                font-size: 0.4rem;
+                letter-spacing: 0.02em;
+            }
+
+            .selected-crop-name {
+                font-size: clamp(1.6rem, 10vw, 2.2rem);
+            }
+
+            .selected-crop-state {
+                font-size: 0.75rem;
+                letter-spacing: 0.2em;
+            }
+
+            .center-prompt-icon {
+                width: 44px;
+                height: 44px;
+                margin-bottom: 0.75rem;
+            }
+
+            .center-prompt-text {
+                font-size: 0.72rem;
+            }
+
+            .inputs-container {
+                gap: 0.4rem;
+                margin-top: 1rem;
+                padding: 0 0.25rem;
+            }
+
+            .input-card {
+                padding: 0.45rem 0.5rem;
+                min-width: 52px;
+                border-radius: 8px;
+            }
+
+            .input-icon-wrap {
+                width: 26px;
+                height: 26px;
+                border-radius: 6px;
+                margin-bottom: 0.3rem;
+            }
+
+            .input-icon {
+                font-size: 0.75rem;
+            }
+
+            .input-value {
+                font-size: 0.88rem;
+            }
+
+            .input-label {
+                font-size: 0.45rem;
+            }
+
+            .calc-section {
+                margin-top: 1.5rem;
+            }
+
+            .calc-button {
+                padding: 0.8rem 1.5rem;
+                font-size: 0.88rem;
+                border-radius: 50px;
+            }
+
+            .gear-icon {
+                width: 18px;
+                height: 18px;
+            }
+
+            .result-section {
+                margin-top: 1.5rem;
+            }
+
+            .rent-label {
+                font-size: 0.68rem;
+                letter-spacing: 0.15em;
+                margin-bottom: 0.5rem;
+            }
+
+            .rent-value {
+                font-size: clamp(2.2rem, 15vw, 3.5rem);
+            }
+
+            .rent-value-glow {
+                font-size: clamp(2.2rem, 15vw, 3.5rem);
+            }
+
+            .rent-unit {
+                font-size: 0.8rem;
+                margin-top: 0.35rem;
+            }
+
+            .cta-section {
+                margin-top: 2rem;
+            }
+
+            .cta-main {
+                padding: 0.85rem 1.25rem;
+                font-size: 0.85rem;
+                border-radius: 50px;
+            }
+
+            .cta-main svg {
+                width: 16px;
+                height: 16px;
+            }
+
+            .cta-sub {
+                font-size: 0.78rem;
+                margin-top: 0.75rem;
+            }
+
+            .scroll-hint {
+                bottom: 1rem;
+            }
+
+            .scroll-hint svg {
+                width: 20px;
+                height: 20px;
+            }
+
+            /* Reduce floating particles on mobile */
+            .seeds-container {
+                opacity: 0.5;
+            }
+
+            /* Simplify gradient orbs on mobile */
+            .gradient-orb {
+                filter: blur(80px);
+                opacity: 0.3;
+            }
+
+            .gradient-orb--emerald {
+                width: 400px;
+                height: 400px;
+            }
+
+            .gradient-orb--gold {
+                width: 300px;
+                height: 300px;
+            }
+
+            .gradient-orb--sage {
+                display: none;
+            }
+        }
+
+        /* ===== LANDSCAPE MODE ON MOBILE ===== */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .hero {
+                padding: 5rem 2rem 2rem;
+                min-height: auto;
+            }
+
+            .hero-header {
+                margin-bottom: 0.75rem;
+            }
+
+            .hero-tag {
+                margin-bottom: 0.75rem;
+            }
+
+            .hero-title {
+                font-size: 1.8rem;
+            }
+
+            .hero-subtitle {
+                font-size: 0.85rem;
+            }
+
+            .instruction {
+                margin-bottom: 1rem;
+            }
+
+            .wheel-section {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                gap: 2rem;
+                max-width: 100%;
+            }
+
+            .wheel-container {
+                max-width: 250px;
+                flex-shrink: 0;
+            }
+
+            .inputs-container {
+                margin-top: 0;
+                flex-direction: column;
+                gap: 0.4rem;
+            }
+
+            .input-card {
+                flex: none;
+                max-width: 100px;
+            }
+
+            .calc-section {
+                margin-top: 1rem;
+            }
+
+            .result-section {
+                margin-top: 1rem;
+            }
+
+            .scroll-hint {
+                display: none;
+            }
+        }
+
+        /* ===== TOUCH DEVICE ENHANCEMENTS ===== */
+        @media (hover: none) and (pointer: coarse) {
+            .crop-item {
+                /* Larger touch targets */
+                min-width: 44px;
+                min-height: 44px;
+            }
+
+            .calc-button:hover {
+                transform: none;
+            }
+
+            .calc-button:active {
+                transform: scale(0.98);
+            }
+
+            .cta-main:hover {
+                transform: none;
+            }
+
+            .cta-main:active {
+                transform: scale(0.98);
+            }
+
+            .btn-header:hover {
+                transform: none;
+            }
+        }
+
+        /* ===== REDUCED MOTION ===== */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+
+            .gradient-orb {
+                animation: none;
+            }
+
+            .seed {
+                display: none;
+            }
+
+            .center-prompt-icon {
+                animation: none;
+            }
+
+            .center-prompt-icon svg {
+                animation: none;
+            }
+        }
+
+        /* ===== HIGH CONTRAST MODE ===== */
+        @media (prefers-contrast: high) {
+            :root {
+                --glass-border: rgba(255, 255, 255, 0.3);
+            }
+
+            .crop-item-inner {
+                border-width: 2px;
+            }
+
+            .input-card {
+                border-width: 2px;
+            }
+        }
+
+        /* ========================================
+           SMOOTH SCROLL INDICATOR
+        ======================================== */
+        .scroll-hint {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--sage);
+            font-size: 0.75rem;
+            opacity: 0.6;
+            animation: bounce 2s ease-in-out infinite;
+            z-index: 10;
+        }
+
+        .scroll-hint.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(8px); }
+        }
+
+        .scroll-hint svg {
+            width: 24px;
+            height: 24px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Atmospheric Background -->
+    <div class="atmosphere">
+        <div class="gradient-orb gradient-orb--emerald"></div>
+        <div class="gradient-orb gradient-orb--gold"></div>
+        <div class="gradient-orb gradient-orb--sage"></div>
+    </div>
+    <div class="seeds-container" id="seeds"></div>
+    <div class="grain"></div>
+
+    <!-- Celebration particles container -->
+    <div class="celebration" id="celebration"></div>
+
+    <!-- Header -->
+    <header class="header">
+        <a href="#" class="logo">
+            <div class="logo-mark">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 18 Q12 4 21 18" stroke="white"/>
+                    <circle cx="12" cy="12" r="2" fill="white" stroke="none"/>
+                </svg>
+            </div>
+            <span class="logo-text">Rent<span>Curve</span></span>
+        </a>
+        <nav class="nav">
+            <ul class="nav-links">
+                <li><a href="#">Features</a></li>
+                <li><a href="#">Pricing</a></li>
+                <li><a href="#">How It Works</a></li>
+                <li><a href="#">About</a></li>
+            </ul>
+            <a href="https://www.rentcurves.com" class="btn-header">Sign In</a>
+            <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </nav>
+    </header>
+
+    <!-- Mobile Navigation Overlay -->
+    <nav class="mobile-nav" id="mobileNav">
+        <a href="#">Features</a>
+        <a href="#">Pricing</a>
+        <a href="#">How It Works</a>
+        <a href="#">About</a>
+        <a href="https://www.rentcurves.com" class="btn-header">Sign In</a>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-header">
+            <div class="hero-tag">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                    <path d="M2 17l10 5 10-5"/>
+                    <path d="M2 12l10 5 10-5"/>
+                </svg>
+                Agricultural Intelligence
+            </div>
+            <h1 class="hero-title">
+                See Your <span class="accent">Rent</span><br>in Seconds
+            </h1>
+            <p class="hero-subtitle">
+                Select a crop, view the numbers, calculate your precise land rent.
+                No signup required.
+            </p>
+        </div>
+
+        <div class="instruction" id="instruction">
+            <div class="instruction-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M15 15l-2 5L9 9l11 4-5 2z"/>
+                </svg>
+            </div>
+            <span class="instruction-text">Select a crop to begin</span>
+        </div>
+
+        <!-- Crop Wheel -->
+        <div class="wheel-section">
+            <div class="wheel-container">
+                <div class="wheel-ring"></div>
+
+                <div class="crop-wheel" id="cropWheel"></div>
+
+                <!-- Center Display -->
+                <div class="center-display">
+                    <div class="center-glow" id="centerGlow"></div>
+                    <div class="center-prompt" id="centerPrompt">
+                        <div class="center-prompt-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M12 6v6l4 2"/>
+                            </svg>
+                        </div>
+                        <div class="center-prompt-text">Choose your crop</div>
+                    </div>
+                    <div class="selected-crop-name" id="selectedCropName"></div>
+                    <div class="selected-crop-state" id="selectedCropState"></div>
+                </div>
+
+            </div>
+
+            <!-- Input Cards - Below Wheel -->
+            <div class="inputs-container" id="inputsContainer">
+                <div class="input-card" data-input="price">
+                    <div class="input-icon-wrap"><span class="input-icon">$</span></div>
+                    <div class="input-label">Price</div>
+                    <div class="input-value" id="priceValue">--</div>
+                </div>
+                <div class="input-card" data-input="harvestYield">
+                    <div class="input-icon-wrap"><span class="input-icon">Y</span></div>
+                    <div class="input-label">Harvest Yield</div>
+                    <div class="input-value" id="harvestYieldValue">--</div>
+                </div>
+                <div class="input-card" data-input="cost">
+                    <div class="input-icon-wrap"><span class="input-icon">C</span></div>
+                    <div class="input-label">Cost</div>
+                    <div class="input-value" id="costValue">--</div>
+                </div>
+                <div class="input-card" data-input="highYield">
+                    <div class="input-icon-wrap"><span class="input-icon">H</span></div>
+                    <div class="input-label">High Yield</div>
+                    <div class="input-value" id="highYieldValue">--</div>
+                </div>
+                <div class="input-card" data-input="avgYield">
+                    <div class="input-icon-wrap"><span class="input-icon">A</span></div>
+                    <div class="input-label">Avg Yield</div>
+                    <div class="input-value" id="avgYieldValue">--</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calculate Button -->
+        <div class="calc-section">
+            <button class="calc-button" id="calcButton">
+                <svg class="gear-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+                </svg>
+                Calculate Rent
+            </button>
+        </div>
+
+        <!-- Result Section -->
+        <div class="result-section">
+            <div class="rent-result" id="rentResult">
+                <div class="rent-rays"></div>
+                <div class="rent-winner-banner">Your Rent Result</div>
+                <div class="rent-label">Your Calculated Rent</div>
+                <div class="rent-value-wrap">
+                    <div class="rent-sparkles">
+                        <div class="sparkle"></div>
+                        <div class="sparkle"></div>
+                        <div class="sparkle"></div>
+                        <div class="sparkle"></div>
+                        <div class="sparkle"></div>
+                        <div class="sparkle"></div>
+                    </div>
+                    <div class="rent-value-glow" id="rentValueGlow">$0.00</div>
+                    <div class="rent-value" id="rentValue">$0.00</div>
+                </div>
+                <div class="rent-unit">per acre / per year</div>
+            </div>
+        </div>
+
+        <!-- CTA Section -->
+        <div class="cta-section" id="ctaSection">
+            <a href="https://www.rentcurves.com" class="cta-main">
+                Start Using Rent Curves
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+            </a>
+            <span class="cta-sub">Get precise rent calculations for all your fields</span>
+        </div>
+
+        <!-- Scroll Hint -->
+        <div class="scroll-hint" id="scrollHint">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 5v14M5 12l7 7 7-7"/>
+            </svg>
+        </div>
+    </section>
+
+    <script>
+        // ===========================================
+        // CROP DATA (CMS/API)
+        // ===========================================
+        const cropsData = [
+            {
+                id: 1, name: "Corn", state: "Iowa", icon: "🌽",
+                inputs: { price: 486, harvestYield: 220, cost: 425, highYield: 195, avgYield: 175 },
+                apiData: { basePrice: 450, coverageLevel: 75, premium: 28, insuranceShared: true }
+            },
+            {
+                id: 2, name: "Soybeans", state: "Illinois", icon: "🫘",
+                inputs: { price: 1280, harvestYield: 58, cost: 380, highYield: 52, avgYield: 48 },
+                apiData: { basePrice: 1200, coverageLevel: 70, premium: 22, insuranceShared: true }
+            },
+            {
+                id: 3, name: "Wheat", state: "Kansas", icon: "🌾",
+                inputs: { price: 680, harvestYield: 45, cost: 295, highYield: 42, avgYield: 38 },
+                apiData: { basePrice: 620, coverageLevel: 65, premium: 18, insuranceShared: true }
+            },
+            {
+                id: 4, name: "Canola", state: "Montana", icon: "🌻",
+                inputs: { price: 1450, harvestYield: 32, cost: 320, highYield: 30, avgYield: 26 },
+                apiData: { basePrice: 1380, coverageLevel: 70, premium: 24, insuranceShared: true }
+            },
+            {
+                id: 5, name: "Cotton", state: "Texas", icon: "☁️",
+                inputs: { price: 92, harvestYield: 850, cost: 510, highYield: 920, avgYield: 780 },
+                apiData: { basePrice: 88, coverageLevel: 75, premium: 35, insuranceShared: true }
+            },
+            {
+                id: 6, name: "Rice", state: "Arkansas", icon: "🍚",
+                inputs: { price: 1520, harvestYield: 72, cost: 445, highYield: 78, avgYield: 68 },
+                apiData: { basePrice: 1480, coverageLevel: 70, premium: 30, insuranceShared: true }
+            }
+        ];
+
+        // ===========================================
+        // STATE
+        // ===========================================
+        let selectedCrop = null;
+        let wheelRotation = 0;
+
+        // ===========================================
+        // DOM ELEMENTS
+        // ===========================================
+        const cropWheel = document.getElementById('cropWheel');
+        const selectedCropName = document.getElementById('selectedCropName');
+        const selectedCropState = document.getElementById('selectedCropState');
+        const centerGlow = document.getElementById('centerGlow');
+        const centerPrompt = document.getElementById('centerPrompt');
+        const calcButton = document.getElementById('calcButton');
+        const rentResult = document.getElementById('rentResult');
+        const rentValue = document.getElementById('rentValue');
+        const rentValueGlow = document.getElementById('rentValueGlow');
+        const ctaSection = document.getElementById('ctaSection');
+        const instruction = document.getElementById('instruction');
+        const scrollHint = document.getElementById('scrollHint');
+        const celebration = document.getElementById('celebration');
+
+        // ===========================================
+        // CREATE FLOATING SEEDS
+        // ===========================================
+        function createSeeds() {
+            const container = document.getElementById('seeds');
+            const numSeeds = 25;
+            const colors = ['#10b981', '#34d399', '#6ee7b7', '#fbbf24', '#f59e0b'];
+
+            for (let i = 0; i < numSeeds; i++) {
+                const seed = document.createElement('div');
+                seed.className = 'seed';
+                seed.style.left = Math.random() * 100 + '%';
+                seed.style.animationDelay = Math.random() * 25 + 's';
+                seed.style.animationDuration = (20 + Math.random() * 15) + 's';
+                seed.style.background = colors[Math.floor(Math.random() * colors.length)];
+                seed.style.width = (2 + Math.random() * 3) + 'px';
+                seed.style.height = seed.style.width;
+                container.appendChild(seed);
+            }
+        }
+
+        // ===========================================
+        // RESPONSIVE WHEEL RADIUS
+        // ===========================================
+        function getWheelRadius() {
+            const width = window.innerWidth;
+            if (width <= 479) return 100;
+            if (width <= 599) return 115;
+            if (width <= 767) return 140;
+            if (width <= 899) return 170;
+            if (width <= 1023) return 195;
+            return 215;
+        }
+
+        // ===========================================
+        // INITIALIZE WHEEL
+        // ===========================================
+        function initWheel() {
+            const numCrops = cropsData.length;
+            const angleStep = 360 / numCrops;
+            const radius = getWheelRadius();
+
+            cropsData.forEach((crop, index) => {
+                const angle = angleStep * index - 90;
+                const radians = (angle * Math.PI) / 180;
+                const x = Math.cos(radians) * radius;
+                const y = Math.sin(radians) * radius;
+
+                const cropEl = document.createElement('div');
+                cropEl.className = 'crop-item';
+                cropEl.dataset.cropId = crop.id;
+                cropEl.dataset.angle = angle;
+                cropEl.style.transform = `translate(${x}px, ${y}px)`;
+                cropEl.innerHTML = `
+                    <div class="crop-item-inner">
+                        <span class="crop-icon">${crop.icon}</span>
+                        <span class="crop-label">${crop.name}<br>${crop.state}</span>
+                    </div>
+                `;
+
+                cropEl.addEventListener('click', () => selectCrop(crop));
+                cropWheel.appendChild(cropEl);
+            });
+        }
+
+        // ===========================================
+        // UPDATE WHEEL ON RESIZE
+        // ===========================================
+        function updateWheelPositions() {
+            const radius = getWheelRadius();
+            const numCrops = cropsData.length;
+            const angleStep = 360 / numCrops;
+
+            document.querySelectorAll('.crop-item').forEach((cropEl, index) => {
+                const angle = angleStep * index - 90;
+                const radians = (angle * Math.PI) / 180;
+                const x = Math.cos(radians) * radius;
+                const y = Math.sin(radians) * radius;
+
+                const baseTransform = `translate(${x}px, ${y}px)`;
+                cropEl.dataset.baseTransform = baseTransform;
+                cropEl.style.transform = baseTransform + `rotate(${-wheelRotation}deg)`;
+            });
+        }
+
+        // Debounce resize handler
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(updateWheelPositions, 150);
+        });
+
+        // ===========================================
+        // SELECT CROP
+        // ===========================================
+        function selectCrop(crop) {
+            document.querySelectorAll('.crop-item').forEach(el => el.classList.remove('selected'));
+            const cropEl = document.querySelector(`[data-crop-id="${crop.id}"]`);
+            cropEl.classList.add('selected');
+
+            selectedCrop = crop;
+
+            // Hide prompt, show selection
+            centerPrompt.classList.add('hidden');
+            centerGlow.classList.add('active');
+
+            selectedCropName.textContent = crop.name;
+            selectedCropName.classList.add('active');
+            selectedCropState.textContent = crop.state;
+            selectedCropState.classList.add('active');
+
+            showInputValues(crop);
+            calcButton.classList.add('visible');
+            scrollHint.classList.add('hidden');
+
+            // Update instruction
+            instruction.innerHTML = `
+                <div class="instruction-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                </div>
+                <span class="instruction-text">${crop.name} selected - now calculate!</span>
+            `;
+
+            rentResult.classList.remove('visible');
+            ctaSection.classList.remove('visible');
+        }
+
+        // ===========================================
+        // SHOW INPUT VALUES
+        // ===========================================
+        function showInputValues(crop) {
+            const inputCards = document.querySelectorAll('.input-card');
+
+            inputCards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.classList.add('visible');
+                    card.classList.add('shimmer');
+                    setTimeout(() => card.classList.remove('shimmer'), 1500);
+                }, index * 120);
+            });
+
+            setTimeout(() => animateValue('priceValue', 0, crop.inputs.price, '$'), 100);
+            setTimeout(() => animateValue('harvestYieldValue', 0, crop.inputs.harvestYield, ''), 200);
+            setTimeout(() => animateValue('costValue', 0, crop.inputs.cost, '$'), 300);
+            setTimeout(() => animateValue('highYieldValue', 0, crop.inputs.highYield, ''), 400);
+            setTimeout(() => animateValue('avgYieldValue', 0, crop.inputs.avgYield, ''), 500);
+        }
+
+        // ===========================================
+        // ANIMATE VALUE
+        // ===========================================
+        function animateValue(elementId, start, end, prefix = '') {
+            const element = document.getElementById(elementId);
+            const duration = 900;
+            const startTime = performance.now();
+
+            function update(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const easeOut = 1 - Math.pow(1 - progress, 4);
+                const current = Math.round(start + (end - start) * easeOut);
+                element.textContent = prefix + current.toLocaleString();
+
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                }
+            }
+
+            requestAnimationFrame(update);
+        }
+
+        // ===========================================
+        // CALCULATE RENT
+        // ===========================================
+        async function calculateRent() {
+            if (!selectedCrop) return;
+
+            calcButton.classList.add('calculating');
+
+            try {
+                // TODO: Replace with actual API call
+                await new Promise(resolve => setTimeout(resolve, 1800));
+                const rentAmount = calculateMockRent(selectedCrop);
+                showRentResult(rentAmount);
+            } catch (error) {
+                console.error('API Error:', error);
+            } finally {
+                calcButton.classList.remove('calculating');
+            }
+        }
+
+        function calculateMockRent(crop) {
+            const { price, harvestYield, cost, avgYield } = crop.inputs;
+            const grossRevenue = price * harvestYield / 100;
+            const netReturn = grossRevenue - cost;
+            const rent = netReturn * 0.35;
+            return Math.max(0, rent);
+        }
+
+        // ===========================================
+        // SHOW RENT RESULT
+        // ===========================================
+        function showRentResult(amount) {
+            // Add revealing class for slot-machine animation
+            rentResult.classList.add('revealing');
+
+            // Short delay then show result
+            setTimeout(() => {
+                rentResult.classList.remove('revealing');
+                rentResult.classList.add('visible');
+                createCelebration();
+
+                // Play a subtle "cha-ching" sound effect (optional)
+                playWinSound();
+            }, 200);
+
+            const duration = 1500;
+            const startTime = performance.now();
+
+            function updateRent(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const easeOut = 1 - Math.pow(1 - progress, 5);
+                const current = amount * easeOut;
+                const formatted = '$' + current.toFixed(2);
+                rentValue.textContent = formatted;
+                rentValueGlow.textContent = formatted;
+
+                if (progress < 1) {
+                    requestAnimationFrame(updateRent);
+                } else {
+                    setTimeout(() => ctaSection.classList.add('visible'), 400);
+                }
+            }
+
+            // Delay the number animation slightly for dramatic effect
+            setTimeout(() => requestAnimationFrame(updateRent), 300);
+
+            instruction.innerHTML = `
+                <div class="instruction-icon" style="background: var(--gold);">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2z"/>
+                    </svg>
+                </div>
+                <span class="instruction-text">Your ${selectedCrop.name} rent is ready!</span>
+            `;
+        }
+
+        // ===========================================
+        // CASINO WIN SOUND (Web Audio API)
+        // ===========================================
+        function playWinSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+                // Create a "cha-ching" type sound
+                const frequencies = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+
+                frequencies.forEach((freq, i) => {
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+
+                    oscillator.type = 'sine';
+                    oscillator.frequency.value = freq;
+
+                    const startTime = audioContext.currentTime + (i * 0.08);
+                    gainNode.gain.setValueAtTime(0.15, startTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.3);
+
+                    oscillator.start(startTime);
+                    oscillator.stop(startTime + 0.3);
+                });
+            } catch (e) {
+                // Audio not supported, silently fail
+            }
+        }
+
+        // ===========================================
+        // CELEBRATION PARTICLES
+        // ===========================================
+        function createCelebration() {
+            const colors = ['#fbbf24', '#f59e0b', '#d97706', '#10b981', '#34d399'];
+            const numParticles = 80; // More particles for bigger celebration
+
+            for (let i = 0; i < numParticles; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'confetti';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = '50%';
+                particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+                particle.style.width = (5 + Math.random() * 10) + 'px';
+                particle.style.height = particle.style.width;
+                particle.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+
+                celebration.appendChild(particle);
+
+                // Animate
+                const angle = Math.random() * Math.PI * 2;
+                const velocity = 200 + Math.random() * 300;
+                const vx = Math.cos(angle) * velocity;
+                const vy = Math.sin(angle) * velocity - 200;
+
+                particle.animate([
+                    {
+                        transform: 'translate(0, 0) rotate(0deg)',
+                        opacity: 1
+                    },
+                    {
+                        transform: `translate(${vx}px, ${vy + 500}px) rotate(${Math.random() * 720}deg)`,
+                        opacity: 0
+                    }
+                ], {
+                    duration: 1500 + Math.random() * 1000,
+                    easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                }).onfinish = () => particle.remove();
+            }
+        }
+
+        // ===========================================
+        // WHEEL DRAG
+        // ===========================================
+        let isDragging = false;
+        let startX = 0;
+
+        cropWheel.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startX = e.clientX;
+            cropWheel.style.transition = 'none';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const diff = e.clientX - startX;
+            wheelRotation += diff * 0.15;
+            cropWheel.style.transform = `rotate(${wheelRotation}deg)`;
+
+            document.querySelectorAll('.crop-item').forEach(item => {
+                const base = item.style.transform.split('rotate')[0];
+                item.style.transform = base + `rotate(${-wheelRotation}deg)`;
+            });
+
+            startX = e.clientX;
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+            cropWheel.style.transition = 'transform 1s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+        });
+
+        // Touch support
+        cropWheel.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            startX = e.touches[0].clientX;
+            cropWheel.style.transition = 'none';
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            const diff = e.touches[0].clientX - startX;
+            wheelRotation += diff * 0.2;
+            cropWheel.style.transform = `rotate(${wheelRotation}deg)`;
+
+            document.querySelectorAll('.crop-item').forEach(item => {
+                const base = item.dataset.baseTransform || item.style.transform.split('rotate')[0];
+                item.dataset.baseTransform = base;
+                item.style.transform = base + `rotate(${-wheelRotation}deg)`;
+            });
+
+            startX = e.touches[0].clientX;
+        });
+
+        document.addEventListener('touchend', () => {
+            isDragging = false;
+            cropWheel.style.transition = 'transform 1s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+        });
+
+        // ===========================================
+        // MOBILE MENU
+        // ===========================================
+        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        const mobileNav = document.getElementById('mobileNav');
+
+        function toggleMobileMenu() {
+            mobileMenuToggle.classList.toggle('active');
+            mobileNav.classList.toggle('active');
+            document.body.style.overflow = mobileNav.classList.contains('active') ? 'hidden' : '';
+        }
+
+        mobileMenuToggle.addEventListener('click', toggleMobileMenu);
+
+        // Close mobile menu when clicking a link
+        mobileNav.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                mobileMenuToggle.classList.remove('active');
+                mobileNav.classList.remove('active');
+                document.body.style.overflow = '';
+            });
+        });
+
+        // Close mobile menu on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && mobileNav.classList.contains('active')) {
+                toggleMobileMenu();
+            }
+        });
+
+        // Close mobile menu on resize to desktop
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 899 && mobileNav.classList.contains('active')) {
+                mobileMenuToggle.classList.remove('active');
+                mobileNav.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        });
+
+        // ===========================================
+        // EVENT LISTENERS
+        // ===========================================
+        calcButton.addEventListener('click', calculateRent);
+
+        // ===========================================
+        // INIT
+        // ===========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            initWheel();
+            createSeeds();
+        });
+    </script>
+</body>
+</html>
