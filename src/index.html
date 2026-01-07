@@ -15,7 +15,7 @@
         }
 
         :root {
-            /* Core palette */
+            /* Core palette - Dynamic Theme */
             --midnight: #030806;
             --forest-deep: #071410;
             --forest: #0d261e;
@@ -40,6 +40,16 @@
             --glow-gold: 0 0 80px rgba(251, 191, 36, 0.5);
             --glass: rgba(255, 255, 255, 0.03);
             --glass-border: rgba(255, 255, 255, 0.08);
+
+            /* Dynamic Theme Colors - Will be updated by JS */
+            --theme-primary: #059669;
+            --theme-secondary: #10b981;
+            --theme-accent: #34d399;
+            --theme-glow: rgba(16, 185, 129, 0.4);
+            --theme-bg-1: rgba(5, 150, 105, 0.3);
+            --theme-bg-2: rgba(217, 119, 6, 0.2);
+            --theme-bg-3: rgba(107, 128, 104, 0.2);
+            --theme-particle: #10b981;
         }
 
         html {
@@ -77,29 +87,32 @@
         .gradient-orb--emerald {
             width: 600px;
             height: 600px;
-            background: radial-gradient(circle, rgba(5, 150, 105, 0.3) 0%, transparent 70%);
+            background: radial-gradient(circle, var(--theme-bg-1) 0%, transparent 70%);
             top: -200px;
             left: -100px;
             animation-delay: 0s;
+            transition: background 1.5s ease-in-out;
         }
 
         .gradient-orb--gold {
             width: 500px;
             height: 500px;
-            background: radial-gradient(circle, rgba(217, 119, 6, 0.2) 0%, transparent 70%);
+            background: radial-gradient(circle, var(--theme-bg-2) 0%, transparent 70%);
             bottom: -150px;
             right: -100px;
             animation-delay: -10s;
+            transition: background 1.5s ease-in-out;
         }
 
         .gradient-orb--sage {
             width: 400px;
             height: 400px;
-            background: radial-gradient(circle, rgba(107, 128, 104, 0.2) 0%, transparent 70%);
+            background: radial-gradient(circle, var(--theme-bg-3) 0%, transparent 70%);
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             animation-delay: -5s;
+            transition: background 1.5s ease-in-out;
         }
 
         @keyframes float-orb {
@@ -131,10 +144,11 @@
             position: absolute;
             width: 3px;
             height: 3px;
-            background: var(--emerald-light);
+            background: var(--theme-particle);
             border-radius: 50%;
             opacity: 0;
             animation: drift 25s linear infinite;
+            transition: background 1s ease;
         }
 
         .seed::after {
@@ -664,7 +678,7 @@
             position: absolute;
             inset: 0;
             border-radius: inherit;
-            background: linear-gradient(90deg, transparent, rgba(251, 191, 36, 0.3), transparent);
+            background: linear-gradient(90deg, transparent, var(--theme-glow, rgba(251, 191, 36, 0.3)), transparent);
             animation: shimmer-sweep 1.5s ease-out;
         }
 
@@ -739,7 +753,7 @@
 
         .calc-button {
             position: relative;
-            background: linear-gradient(135deg, var(--emerald) 0%, var(--emerald-light) 100%);
+            background: linear-gradient(135deg, var(--theme-primary, var(--emerald)) 0%, var(--theme-secondary, var(--emerald-light)) 100%);
             border: none;
             color: white;
             font-family: 'Outfit', sans-serif;
@@ -754,7 +768,7 @@
             opacity: 0;
             transform: translateY(30px);
             pointer-events: none;
-            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.8s ease;
             overflow: hidden;
         }
 
@@ -779,7 +793,7 @@
 
         .calc-button:hover {
             transform: translateY(-4px);
-            box-shadow: 0 20px 50px rgba(5, 150, 105, 0.4);
+            box-shadow: 0 20px 50px var(--theme-glow, rgba(5, 150, 105, 0.4));
         }
 
         .calc-button:active {
@@ -2191,38 +2205,104 @@
 
     <script>
         // ===========================================
-        // CROP DATA (CMS/API)
+        // CROP DATA (CMS/API) WITH THEMES
         // ===========================================
         const cropsData = [
             {
                 id: 1, name: "Corn", state: "Iowa", icon: "🌽",
                 inputs: { price: 486, harvestYield: 220, cost: 425, highYield: 195, avgYield: 175 },
-                apiData: { basePrice: 450, coverageLevel: 75, premium: 28, insuranceShared: true }
+                apiData: { basePrice: 450, coverageLevel: 75, premium: 28, insuranceShared: true },
+                theme: {
+                    primary: '#d97706',      // Amber
+                    secondary: '#f59e0b',    // Golden
+                    accent: '#fbbf24',       // Light gold
+                    glow: 'rgba(245, 158, 11, 0.5)',
+                    bg1: 'rgba(217, 119, 6, 0.35)',   // Amber orb
+                    bg2: 'rgba(251, 191, 36, 0.25)',  // Golden orb
+                    bg3: 'rgba(180, 140, 60, 0.2)',   // Warm accent
+                    particle: '#fbbf24',
+                    seedColors: ['#fbbf24', '#f59e0b', '#d97706', '#fcd34d', '#fef3c7']
+                }
             },
             {
                 id: 2, name: "Soybeans", state: "Illinois", icon: "🫘",
                 inputs: { price: 1280, harvestYield: 58, cost: 380, highYield: 52, avgYield: 48 },
-                apiData: { basePrice: 1200, coverageLevel: 70, premium: 22, insuranceShared: true }
+                apiData: { basePrice: 1200, coverageLevel: 70, premium: 22, insuranceShared: true },
+                theme: {
+                    primary: '#16a34a',      // Green
+                    secondary: '#22c55e',    // Vibrant green
+                    accent: '#4ade80',       // Light green
+                    glow: 'rgba(34, 197, 94, 0.5)',
+                    bg1: 'rgba(22, 163, 74, 0.35)',   // Green orb
+                    bg2: 'rgba(74, 222, 128, 0.25)',  // Light green orb
+                    bg3: 'rgba(34, 140, 80, 0.2)',    // Forest accent
+                    particle: '#4ade80',
+                    seedColors: ['#4ade80', '#22c55e', '#16a34a', '#86efac', '#dcfce7']
+                }
             },
             {
                 id: 3, name: "Wheat", state: "Kansas", icon: "🌾",
                 inputs: { price: 680, harvestYield: 45, cost: 295, highYield: 42, avgYield: 38 },
-                apiData: { basePrice: 620, coverageLevel: 65, premium: 18, insuranceShared: true }
+                apiData: { basePrice: 620, coverageLevel: 65, premium: 18, insuranceShared: true },
+                theme: {
+                    primary: '#b45309',      // Warm brown
+                    secondary: '#d97706',    // Amber
+                    accent: '#fbbf24',       // Wheat gold
+                    glow: 'rgba(180, 83, 9, 0.5)',
+                    bg1: 'rgba(180, 83, 9, 0.35)',    // Warm brown orb
+                    bg2: 'rgba(217, 119, 6, 0.25)',   // Amber orb
+                    bg3: 'rgba(161, 98, 7, 0.2)',     // Deep wheat
+                    particle: '#fbbf24',
+                    seedColors: ['#fbbf24', '#d97706', '#b45309', '#fcd34d', '#a16207']
+                }
             },
             {
                 id: 4, name: "Canola", state: "Montana", icon: "🌻",
                 inputs: { price: 1450, harvestYield: 32, cost: 320, highYield: 30, avgYield: 26 },
-                apiData: { basePrice: 1380, coverageLevel: 70, premium: 24, insuranceShared: true }
+                apiData: { basePrice: 1380, coverageLevel: 70, premium: 24, insuranceShared: true },
+                theme: {
+                    primary: '#eab308',      // Bright yellow
+                    secondary: '#facc15',    // Sunny yellow
+                    accent: '#fde047',       // Light yellow
+                    glow: 'rgba(234, 179, 8, 0.5)',
+                    bg1: 'rgba(234, 179, 8, 0.35)',   // Bright yellow orb
+                    bg2: 'rgba(253, 224, 71, 0.25)',  // Light yellow orb
+                    bg3: 'rgba(202, 138, 4, 0.2)',    // Deep yellow
+                    particle: '#fde047',
+                    seedColors: ['#fde047', '#facc15', '#eab308', '#fef08a', '#fef9c3']
+                }
             },
             {
                 id: 5, name: "Cotton", state: "Texas", icon: "☁️",
                 inputs: { price: 92, harvestYield: 850, cost: 510, highYield: 920, avgYield: 780 },
-                apiData: { basePrice: 88, coverageLevel: 75, premium: 35, insuranceShared: true }
+                apiData: { basePrice: 88, coverageLevel: 75, premium: 35, insuranceShared: true },
+                theme: {
+                    primary: '#64748b',      // Slate
+                    secondary: '#94a3b8',    // Light slate
+                    accent: '#e2e8f0',       // Cloud white
+                    glow: 'rgba(148, 163, 184, 0.5)',
+                    bg1: 'rgba(148, 163, 184, 0.3)',  // Slate orb
+                    bg2: 'rgba(226, 232, 240, 0.25)', // White/cloud orb
+                    bg3: 'rgba(100, 116, 139, 0.2)',  // Deep slate
+                    particle: '#e2e8f0',
+                    seedColors: ['#e2e8f0', '#cbd5e1', '#94a3b8', '#f1f5f9', '#ffffff']
+                }
             },
             {
                 id: 6, name: "Rice", state: "Arkansas", icon: "🍚",
                 inputs: { price: 1520, harvestYield: 72, cost: 445, highYield: 78, avgYield: 68 },
-                apiData: { basePrice: 1480, coverageLevel: 70, premium: 30, insuranceShared: true }
+                apiData: { basePrice: 1480, coverageLevel: 70, premium: 30, insuranceShared: true },
+                theme: {
+                    primary: '#0891b2',      // Cyan/teal
+                    secondary: '#06b6d4',    // Bright cyan
+                    accent: '#22d3ee',       // Light cyan
+                    glow: 'rgba(6, 182, 212, 0.5)',
+                    bg1: 'rgba(8, 145, 178, 0.35)',   // Teal orb
+                    bg2: 'rgba(34, 211, 238, 0.25)',  // Light cyan orb
+                    bg3: 'rgba(14, 116, 144, 0.2)',   // Deep water
+                    particle: '#22d3ee',
+                    seedColors: ['#22d3ee', '#06b6d4', '#0891b2', '#67e8f9', '#cffafe']
+                }
             }
         ];
 
@@ -2231,6 +2311,85 @@
         // ===========================================
         let selectedCrop = null;
         let wheelRotation = 0;
+        let currentTheme = null;
+
+        // ===========================================
+        // THEME SYSTEM
+        // ===========================================
+        function applyTheme(theme, instant = false) {
+            if (!theme) return;
+
+            const root = document.documentElement;
+            const duration = instant ? '0s' : '1.2s';
+
+            // Set transition duration for smooth theme changes
+            root.style.setProperty('--theme-transition', duration);
+
+            // Apply theme colors to CSS variables
+            root.style.setProperty('--theme-primary', theme.primary);
+            root.style.setProperty('--theme-secondary', theme.secondary);
+            root.style.setProperty('--theme-accent', theme.accent);
+            root.style.setProperty('--theme-glow', theme.glow);
+            root.style.setProperty('--theme-bg-1', theme.bg1);
+            root.style.setProperty('--theme-bg-2', theme.bg2);
+            root.style.setProperty('--theme-bg-3', theme.bg3);
+            root.style.setProperty('--theme-particle', theme.particle);
+
+            // Update floating seeds colors
+            updateSeedColors(theme.seedColors);
+
+            // Create burst effect for dramatic theme change
+            if (!instant) {
+                createThemeBurst(theme.accent);
+            }
+
+            currentTheme = theme;
+        }
+
+        function updateSeedColors(colors) {
+            const seeds = document.querySelectorAll('.seed');
+            seeds.forEach((seed, i) => {
+                const color = colors[i % colors.length];
+                seed.style.background = color;
+            });
+        }
+
+        function createThemeBurst(color) {
+            const burst = document.createElement('div');
+            burst.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                width: 10px;
+                height: 10px;
+                background: ${color};
+                border-radius: 50%;
+                transform: translate(-50%, -50%);
+                pointer-events: none;
+                z-index: 9999;
+                opacity: 0.6;
+            `;
+            document.body.appendChild(burst);
+
+            burst.animate([
+                { transform: 'translate(-50%, -50%) scale(1)', opacity: 0.6 },
+                { transform: 'translate(-50%, -50%) scale(200)', opacity: 0 }
+            ], {
+                duration: 1200,
+                easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+            }).onfinish = () => burst.remove();
+        }
+
+        // Hint at theme when crop is in spotlight (during rotation)
+        function hintTheme(theme, intensity = 0.3) {
+            if (!theme) return;
+
+            const root = document.documentElement;
+
+            // Blend current theme with hint theme
+            root.style.setProperty('--theme-bg-1', theme.bg1.replace('0.35', String(0.35 * intensity)));
+            root.style.setProperty('--theme-bg-2', theme.bg2.replace('0.25', String(0.25 * intensity)));
+        }
 
         // ===========================================
         // DOM ELEMENTS
@@ -2309,7 +2468,7 @@
                     </div>
                 `;
 
-                cropEl.addEventListener('click', () => selectCrop(crop));
+                // Click handler added in initAutoRotation
                 cropWheel.appendChild(cropEl);
             });
         }
@@ -2351,6 +2510,9 @@
 
             selectedCrop = crop;
 
+            // APPLY CROP THEME - Transform the entire page!
+            applyTheme(crop.theme);
+
             // Hide prompt, show selection
             centerPrompt.classList.add('hidden');
             centerGlow.classList.add('active');
@@ -2360,19 +2522,25 @@
             selectedCropState.textContent = crop.state;
             selectedCropState.classList.add('active');
 
+            // Update selected crop name color to match theme
+            selectedCropName.style.textShadow = `0 0 60px ${crop.theme.glow}`;
+            selectedCropState.style.color = crop.theme.secondary;
+
             showInputValues(crop);
             calcButton.classList.add('visible');
             scrollHint.classList.add('hidden');
 
-            // Update instruction
+            // Update instruction with theme color
             instruction.innerHTML = `
-                <div class="instruction-icon">
+                <div class="instruction-icon" style="background: ${crop.theme.primary};">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                         <polyline points="20 6 9 17 4 12"/>
                     </svg>
                 </div>
                 <span class="instruction-text">${crop.name} selected - now calculate!</span>
             `;
+            instruction.style.borderColor = `${crop.theme.primary}40`;
+            instruction.style.background = `linear-gradient(135deg, ${crop.theme.primary}20 0%, ${crop.theme.secondary}15 100%)`;
 
             rentResult.classList.remove('visible');
             ctaSection.classList.remove('visible');
@@ -2383,11 +2551,23 @@
         // ===========================================
         function showInputValues(crop) {
             const inputCards = document.querySelectorAll('.input-card');
+            const theme = crop.theme;
 
             inputCards.forEach((card, index) => {
                 setTimeout(() => {
                     card.classList.add('visible');
                     card.classList.add('shimmer');
+
+                    // Apply theme colors to input cards
+                    const iconWrap = card.querySelector('.input-icon-wrap');
+                    if (iconWrap) {
+                        iconWrap.style.background = `linear-gradient(135deg, ${theme.primary} 0%, ${theme.secondary} 100%)`;
+                        iconWrap.style.boxShadow = `0 4px 15px ${theme.glow}`;
+                    }
+
+                    // Update shimmer color
+                    card.style.setProperty('--shimmer-color', theme.accent);
+
                     setTimeout(() => card.classList.remove('shimmer'), 1500);
                 }, index * 120);
             });
@@ -2454,6 +2634,25 @@
         // SHOW RENT RESULT
         // ===========================================
         function showRentResult(amount) {
+            const theme = selectedCrop.theme;
+
+            // Update rent value styling with theme colors
+            rentValue.style.background = `linear-gradient(135deg, ${theme.accent} 0%, ${theme.primary} 50%, ${theme.secondary} 100%)`;
+            rentValue.style.webkitBackgroundClip = 'text';
+            rentValue.style.webkitTextFillColor = 'transparent';
+            rentValueGlow.style.color = theme.accent;
+
+            // Update sparkles with theme color
+            document.querySelectorAll('.sparkle').forEach(sparkle => {
+                sparkle.style.background = theme.accent;
+            });
+
+            // Update rays with theme color
+            const raysEl = document.querySelector('.rent-rays');
+            if (raysEl) {
+                raysEl.style.setProperty('--ray-color', `${theme.accent}20`);
+            }
+
             // Add revealing class for slot-machine animation
             rentResult.classList.add('revealing');
 
@@ -2461,7 +2660,7 @@
             setTimeout(() => {
                 rentResult.classList.remove('revealing');
                 rentResult.classList.add('visible');
-                createCelebration();
+                createCelebration(theme);
 
                 // Play a subtle "cha-ching" sound effect (optional)
                 playWinSound();
@@ -2490,7 +2689,7 @@
             setTimeout(() => requestAnimationFrame(updateRent), 300);
 
             instruction.innerHTML = `
-                <div class="instruction-icon" style="background: var(--gold);">
+                <div class="instruction-icon" style="background: linear-gradient(135deg, ${theme.primary} 0%, ${theme.secondary} 100%);">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                         <path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2z"/>
                     </svg>
@@ -2534,8 +2733,9 @@
         // ===========================================
         // CELEBRATION PARTICLES
         // ===========================================
-        function createCelebration() {
-            const colors = ['#fbbf24', '#f59e0b', '#d97706', '#10b981', '#34d399'];
+        function createCelebration(theme) {
+            // Use theme colors for celebration particles
+            const colors = theme ? theme.seedColors : ['#fbbf24', '#f59e0b', '#d97706', '#10b981', '#34d399'];
             const numParticles = 80; // More particles for bigger celebration
 
             for (let i = 0; i < numParticles; i++) {
@@ -2573,61 +2773,191 @@
         }
 
         // ===========================================
-        // WHEEL DRAG
+        // AUTO-ROTATING WHEEL WITH SPOTLIGHT
         // ===========================================
-        let isDragging = false;
-        let startX = 0;
+        let isSpinning = true;
+        let spinSpeed = 0.15;  // 50% slower than default 0.3
+        let cropElements = [];
+        let spotlightCrop = null;
 
-        cropWheel.addEventListener('mousedown', (e) => {
-            isDragging = true;
-            startX = e.clientX;
-            cropWheel.style.transition = 'none';
-        });
-
-        document.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            const diff = e.clientX - startX;
-            wheelRotation += diff * 0.15;
-            cropWheel.style.transform = `rotate(${wheelRotation}deg)`;
-
-            document.querySelectorAll('.crop-item').forEach(item => {
-                const base = item.style.transform.split('rotate')[0];
-                item.style.transform = base + `rotate(${-wheelRotation}deg)`;
+        function initAutoRotation() {
+            // Store crop element references with their base angles
+            const items = document.querySelectorAll('.crop-item');
+            items.forEach((el, i) => {
+                const angle = (360 / cropsData.length) * i - 90;
+                cropElements.push({
+                    el: el,
+                    baseAngle: angle,
+                    crop: cropsData[i]
+                });
             });
 
-            startX = e.clientX;
-        });
+            startAutoRotation();
+        }
 
-        document.addEventListener('mouseup', () => {
-            isDragging = false;
-            cropWheel.style.transition = 'transform 1s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-        });
+        function startAutoRotation() {
+            const radius = getWheelRadius();
 
-        // Touch support
-        cropWheel.addEventListener('touchstart', (e) => {
-            isDragging = true;
-            startX = e.touches[0].clientX;
-            cropWheel.style.transition = 'none';
-        });
+            function animate() {
+                if (!isSpinning) return;
 
-        document.addEventListener('touchmove', (e) => {
-            if (!isDragging) return;
-            const diff = e.touches[0].clientX - startX;
-            wheelRotation += diff * 0.2;
-            cropWheel.style.transform = `rotate(${wheelRotation}deg)`;
+                wheelRotation += spinSpeed;
 
-            document.querySelectorAll('.crop-item').forEach(item => {
-                const base = item.dataset.baseTransform || item.style.transform.split('rotate')[0];
-                item.dataset.baseTransform = base;
-                item.style.transform = base + `rotate(${-wheelRotation}deg)`;
+                // Update each crop position
+                cropElements.forEach((item, i) => {
+                    const angle = item.baseAngle + wheelRotation;
+                    const rad = (angle * Math.PI) / 180;
+                    const x = Math.cos(rad) * radius;
+                    const y = Math.sin(rad) * radius;
+
+                    // Calculate distance from top position (270 degrees)
+                    const normalizedAngle = ((angle % 360) + 360) % 360;
+                    const distanceFromTop = Math.abs(normalizedAngle - 270);
+                    const atTop = distanceFromTop < 25 || distanceFromTop > 335;
+
+                    // Spotlight effect - scale and glow crop at top
+                    const scale = atTop ? 1.12 : 1;
+                    const glowIntensity = atTop ? 1 : 0;
+
+                    item.el.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+
+                    if (atTop && !selectedCrop) {
+                        // Apply spotlight glow
+                        item.el.querySelector('.crop-item-inner').style.boxShadow =
+                            `0 0 40px ${item.crop.theme.glow}, inset 0 0 15px ${item.crop.theme.glow}`;
+                        item.el.querySelector('.crop-item-inner').style.borderColor = item.crop.theme.secondary;
+
+                        // Hint at theme colors in spotlight
+                        if (spotlightCrop !== item.crop) {
+                            spotlightCrop = item.crop;
+                            hintThemeSpotlight(item.crop.theme);
+                        }
+                    } else if (!selectedCrop) {
+                        // Reset non-spotlight crops
+                        item.el.querySelector('.crop-item-inner').style.boxShadow = '';
+                        item.el.querySelector('.crop-item-inner').style.borderColor = '';
+                    }
+                });
+
+                requestAnimationFrame(animate);
+            }
+
+            animate();
+        }
+
+        function hintThemeSpotlight(theme) {
+            // Subtle theme hint when crop is in spotlight
+            const root = document.documentElement;
+            root.style.setProperty('--theme-bg-1', theme.bg1.replace('0.35', '0.15'));
+            root.style.setProperty('--theme-bg-2', theme.bg2.replace('0.25', '0.12'));
+        }
+
+        function stopSpinAndSelect(crop, element) {
+            if (!isSpinning && selectedCrop) {
+                // Re-selection - allow changing crops after initial selection
+                reselectCrop(crop, element);
+                return;
+            }
+
+            isSpinning = false;
+
+            // Create particle burst effect
+            createSelectionBurst(element, crop.theme);
+
+            // Highlight selected crop
+            highlightSelectedCrop(crop, element);
+
+            // Apply full theme
+            setTimeout(() => selectCrop(crop), 200);
+        }
+
+        function reselectCrop(crop, element) {
+            // Reset previous selection visuals
+            cropElements.forEach(item => {
+                item.el.classList.remove('selected');
+                const inner = item.el.querySelector('.crop-item-inner');
+                inner.style.boxShadow = '';
+                inner.style.borderColor = '';
+                item.el.style.opacity = '1';
+                item.el.style.filter = '';
             });
 
-            startX = e.touches[0].clientX;
-        });
+            // Create burst for new selection
+            createSelectionBurst(element, crop.theme);
 
-        document.addEventListener('touchend', () => {
-            isDragging = false;
-            cropWheel.style.transition = 'transform 1s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            // Highlight new selection
+            highlightSelectedCrop(crop, element);
+
+            // Apply new theme
+            selectCrop(crop);
+        }
+
+        function highlightSelectedCrop(crop, element) {
+            cropElements.forEach(item => {
+                const isSelected = item.el === element;
+                const inner = item.el.querySelector('.crop-item-inner');
+
+                if (isSelected) {
+                    item.el.classList.add('selected');
+                    item.el.style.transform = item.el.style.transform.replace(/scale\([^)]*\)/, 'scale(1.25)');
+                    inner.style.boxShadow = `0 0 60px ${crop.theme.glow}, inset 0 0 25px ${crop.theme.glow}`;
+                    inner.style.borderColor = crop.theme.accent;
+                } else {
+                    item.el.style.opacity = '0.5';
+                    item.el.style.filter = 'grayscale(50%)';
+                }
+            });
+        }
+
+        function createSelectionBurst(element, theme) {
+            const rect = element.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+
+            for (let i = 0; i < 20; i++) {
+                const particle = document.createElement('div');
+                particle.style.cssText = `
+                    position: fixed;
+                    left: ${centerX}px;
+                    top: ${centerY}px;
+                    width: ${4 + Math.random() * 6}px;
+                    height: ${4 + Math.random() * 6}px;
+                    background: ${theme.seedColors[i % theme.seedColors.length]};
+                    border-radius: 50%;
+                    pointer-events: none;
+                    z-index: 10000;
+                `;
+                document.body.appendChild(particle);
+
+                const angle = (Math.PI * 2 * i) / 20;
+                const velocity = 80 + Math.random() * 60;
+                const vx = Math.cos(angle) * velocity;
+                const vy = Math.sin(angle) * velocity;
+
+                particle.animate([
+                    { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 },
+                    { transform: `translate(calc(-50% + ${vx}px), calc(-50% + ${vy}px)) scale(0)`, opacity: 0 }
+                ], {
+                    duration: 600,
+                    easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                }).onfinish = () => particle.remove();
+            }
+        }
+
+        // Slow down on hover
+        document.querySelectorAll('.crop-item').forEach((item, index) => {
+            item.addEventListener('mouseenter', () => {
+                if (isSpinning) spinSpeed = 0.05;
+            });
+
+            item.addEventListener('mouseleave', () => {
+                if (isSpinning) spinSpeed = 0.15;
+            });
+
+            // Click to select
+            item.addEventListener('click', () => {
+                stopSpinAndSelect(cropsData[index], item);
+            });
         });
 
         // ===========================================
@@ -2680,6 +3010,8 @@
         document.addEventListener('DOMContentLoaded', () => {
             initWheel();
             createSeeds();
+            // Start auto-rotation after wheel is initialized
+            setTimeout(() => initAutoRotation(), 100);
         });
     </script>
 </body>
