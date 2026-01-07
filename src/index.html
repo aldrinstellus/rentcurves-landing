@@ -1247,6 +1247,130 @@
             box-shadow: 0 0 50px var(--theme-glow), inset 0 0 30px color-mix(in srgb, var(--theme-accent) 10%, transparent);
         }
 
+                        /* Unique crop shapes with ultra-fluid animations */
+
+        /* CORN - Dramatic cob shape with wild asymmetric curves */
+        @keyframes corn-morph {
+            0% { border-radius: 55% 20% 60% 25% / 15% 8% 80% 85%; }
+            12% { border-radius: 35% 45% 40% 50% / 25% 20% 65% 70%; }
+            25% { border-radius: 60% 25% 55% 30% / 10% 15% 85% 75%; }
+            37% { border-radius: 25% 55% 35% 65% / 30% 10% 60% 88%; }
+            50% { border-radius: 50% 30% 65% 20% / 12% 25% 78% 65%; }
+            62% { border-radius: 30% 60% 25% 55% / 22% 8% 68% 82%; }
+            75% { border-radius: 65% 20% 50% 35% / 8% 18% 88% 72%; }
+            87% { border-radius: 40% 50% 45% 45% / 18% 12% 72% 78%; }
+            100% { border-radius: 55% 20% 60% 25% / 15% 8% 80% 85%; }
+        }
+
+        /* SOYBEANS - Dramatic kidney bean with extreme variations */
+        @keyframes bean-morph {
+            0% { border-radius: 85% 15% 80% 20% / 75% 25% 70% 30%; }
+            12% { border-radius: 60% 40% 55% 45% / 50% 50% 45% 55%; }
+            25% { border-radius: 80% 20% 85% 15% / 70% 30% 75% 25%; }
+            37% { border-radius: 50% 50% 60% 40% / 40% 60% 50% 50%; }
+            50% { border-radius: 70% 30% 75% 25% / 55% 45% 60% 40%; }
+            62% { border-radius: 55% 45% 50% 50% / 45% 55% 40% 60%; }
+            75% { border-radius: 78% 22% 70% 30% / 68% 32% 65% 35%; }
+            87% { border-radius: 65% 35% 75% 25% / 60% 40% 70% 30%; }
+            100% { border-radius: 85% 15% 80% 20% / 75% 25% 70% 30%; }
+        }
+
+        /* WHEAT - Dramatic kernel with wild pointed variations */
+        @keyframes wheat-morph {
+            0% { border-radius: 70% 30% 25% 15% / 10% 5% 85% 90%; }
+            12% { border-radius: 45% 55% 45% 40% / 25% 15% 70% 75%; }
+            25% { border-radius: 65% 35% 30% 20% / 8% 12% 88% 82%; }
+            37% { border-radius: 40% 60% 50% 35% / 20% 8% 75% 88%; }
+            50% { border-radius: 55% 45% 35% 25% / 12% 18% 82% 78%; }
+            62% { border-radius: 35% 65% 55% 30% / 18% 6% 78% 92%; }
+            75% { border-radius: 75% 25% 28% 18% / 6% 15% 90% 80%; }
+            87% { border-radius: 50% 50% 40% 32% / 15% 10% 80% 85%; }
+            100% { border-radius: 70% 30% 25% 15% / 10% 5% 85% 90%; }
+        }
+
+        /* CANOLA - Dramatic flower with extreme petal variations */
+        @keyframes canola-morph {
+            0% { border-radius: 20% 80% 75% 25% / 25% 75% 25% 75%; }
+            12% { border-radius: 45% 55% 50% 50% / 50% 50% 50% 50%; }
+            25% { border-radius: 25% 75% 80% 20% / 30% 70% 30% 70%; }
+            37% { border-radius: 50% 50% 55% 45% / 45% 55% 45% 55%; }
+            50% { border-radius: 18% 82% 70% 30% / 35% 65% 20% 80%; }
+            62% { border-radius: 40% 60% 60% 40% / 40% 60% 40% 60%; }
+            75% { border-radius: 22% 78% 78% 22% / 28% 72% 28% 72%; }
+            87% { border-radius: 35% 65% 65% 35% / 35% 65% 35% 65%; }
+            100% { border-radius: 20% 80% 75% 25% / 25% 75% 25% 75%; }
+        }
+
+        /* COTTON - Dramatic boll with wild fluffy variations */
+        @keyframes cotton-morph {
+            0% { border-radius: 85% 25% 75% 35% / 70% 80% 25% 75%; }
+            14% { border-radius: 55% 55% 50% 60% / 45% 55% 50% 50%; }
+            28% { border-radius: 80% 30% 70% 40% / 65% 75% 30% 70%; }
+            42% { border-radius: 45% 65% 80% 30% / 75% 50% 35% 80%; }
+            56% { border-radius: 75% 40% 65% 50% / 55% 70% 45% 60%; }
+            70% { border-radius: 60% 50% 55% 55% / 50% 60% 50% 55%; }
+            84% { border-radius: 82% 28% 72% 38% / 68% 78% 28% 72%; }
+            100% { border-radius: 85% 25% 75% 35% / 70% 80% 25% 75%; }
+        }
+
+        /* RICE - Dramatic grain with wild elongated variations */
+        @keyframes rice-morph {
+            0% { border-radius: 35% 10% 38% 8% / 55% 80% 50% 85%; }
+            12% { border-radius: 18% 28% 15% 30% / 75% 60% 78% 62%; }
+            25% { border-radius: 30% 12% 35% 10% / 58% 78% 52% 82%; }
+            37% { border-radius: 12% 35% 10% 38% / 82% 55% 85% 58%; }
+            50% { border-radius: 25% 15% 28% 12% / 62% 75% 58% 78%; }
+            62% { border-radius: 15% 32% 12% 35% / 78% 58% 82% 55%; }
+            75% { border-radius: 38% 8% 32% 15% / 52% 82% 48% 88%; }
+            87% { border-radius: 20% 25% 22% 22% / 70% 68% 72% 70%; }
+            100% { border-radius: 35% 10% 38% 8% / 55% 80% 50% 85%; }
+        }
+
+        .crop-item.crop-corn .crop-item-inner {
+            border-radius: 55% 20% 60% 25% / 15% 8% 80% 85%;
+            animation: corn-morph var(--morph-speed, 5s) ease-in-out infinite;
+        }
+        .crop-item.crop-soybeans .crop-item-inner {
+            border-radius: 85% 15% 80% 20% / 75% 25% 70% 30%;
+            animation: bean-morph var(--morph-speed, 5s) ease-in-out infinite;
+        }
+        .crop-item.crop-wheat .crop-item-inner {
+            border-radius: 70% 30% 25% 15% / 10% 5% 85% 90%;
+            animation: wheat-morph var(--morph-speed, 5s) ease-in-out infinite;
+        }
+        .crop-item.crop-canola .crop-item-inner {
+            border-radius: 20% 80% 75% 25% / 25% 75% 25% 75%;
+            animation: canola-morph var(--morph-speed, 5s) ease-in-out infinite;
+        }
+        .crop-item.crop-cotton .crop-item-inner {
+            border-radius: 85% 25% 75% 35% / 70% 80% 25% 75%;
+            animation: cotton-morph var(--morph-speed, 5s) ease-in-out infinite;
+        }
+        .crop-item.crop-rice .crop-item-inner {
+            border-radius: 35% 10% 38% 8% / 55% 80% 50% 85%;
+            animation: rice-morph var(--morph-speed, 5s) ease-in-out infinite;
+        }
+
+        /* Highlight particles around spotlit crop */
+        .crop-highlight-particle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--theme-accent, #4ade80);
+            pointer-events: none;
+            opacity: 0;
+            animation: particle-orbit var(--particle-duration, 2s) ease-in-out infinite;
+            box-shadow: 0 0 8px var(--theme-glow, rgba(74, 222, 128, 0.5));
+        }
+
+        @keyframes particle-orbit {
+            0% { opacity: 0; transform: translate(0, 0) scale(0.5); }
+            20% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { opacity: 0; transform: translate(var(--px, 20px), var(--py, -20px)) scale(0.2); }
+        }
+
         .crop-icon {
             font-size: 2.5rem;
             filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
@@ -3237,7 +3361,7 @@
                 const y = Math.sin(radians) * radius;
 
                 const cropEl = document.createElement('div');
-                cropEl.className = 'crop-item';
+                cropEl.className = `crop-item crop-${crop.name.toLowerCase()}`;
                 cropEl.dataset.cropId = crop.id;
                 cropEl.dataset.angle = angle;
                 cropEl.style.transform = `translate(${x}px, ${y}px)`;
@@ -3563,6 +3687,54 @@
         let cropElements = [];
         let spotlightCrop = null;
 
+
+        // Create highlight particles around spotlit crop
+        let highlightParticles = [];
+        function createHighlightParticles(element, theme) {
+            // Clear old particles
+            highlightParticles.forEach(p => p.remove());
+            highlightParticles = [];
+
+            const rect = element.getBoundingClientRect();
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+
+            // Create 8 orbiting particles
+            for (let i = 0; i < 8; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'crop-highlight-particle';
+
+                // Random starting position around the shape
+                const angle = (i / 8) * Math.PI * 2;
+                const radius = 55 + Math.random() * 15;
+                const startX = Math.cos(angle) * radius;
+                const startY = Math.sin(angle) * radius;
+
+                // Random end position (floating outward)
+                const endX = startX + (Math.random() - 0.5) * 40;
+                const endY = startY - 20 - Math.random() * 30;
+
+                particle.style.cssText = `
+                    left: ${centerX + startX}px;
+                    top: ${centerY + startY}px;
+                    background: ${theme.accent};
+                    box-shadow: 0 0 10px ${theme.glow};
+                    --px: ${endX - startX}px;
+                    --py: ${endY - startY}px;
+                    --particle-duration: ${1.5 + Math.random() * 1.5}s;
+                    animation-delay: ${i * 0.15}s;
+                `;
+
+                element.appendChild(particle);
+                highlightParticles.push(particle);
+            }
+        }
+
+        function clearHighlightParticles() {
+            highlightParticles.forEach(p => p.remove());
+            highlightParticles = [];
+        }
+
         function initAutoRotation() {
             // Store crop element references with their base angles
             const items = document.querySelectorAll('.crop-item');
@@ -3585,6 +3757,10 @@
                 if (!isSpinning) return;
 
                 wheelRotation += spinSpeed;
+
+                // Update morph speed based on rotation speed (faster spin = faster morph)
+                const morphSpeed = Math.max(1.5, (8 - (spinSpeed * 12)) * 1.3); // Slower with higher variation // 5% slower
+                document.documentElement.style.setProperty('--morph-speed', morphSpeed + 's');
 
                 // Update each crop position
                 cropElements.forEach((item, i) => {
@@ -3615,6 +3791,9 @@
                             spotlightCrop = item.crop;
                             hintThemeSpotlight(item.crop.theme, item.crop.name);
 
+                            // Create highlight particles around the spotlit crop
+                            createHighlightParticles(item.el, item.crop.theme);
+
                             // Show spotlight crop name in center
                             const centerPromptText = document.querySelector('.center-prompt-text');
                             if (centerPromptText) {
@@ -3629,6 +3808,8 @@
                         // Reset non-spotlight crops
                         item.el.querySelector('.crop-item-inner').style.boxShadow = '';
                         item.el.querySelector('.crop-item-inner').style.borderColor = '';
+                        // Remove particles from non-spotlight crops
+                        item.el.querySelectorAll('.crop-highlight-particle').forEach(p => p.remove());
                     }
                 });
 
@@ -4181,6 +4362,9 @@
             }
 
             isSpinning = false;
+            
+            // Slow down morph animation when stopped
+            document.documentElement.style.setProperty('--morph-speed', '7s');
 
             // Create particle burst effect
             createSelectionBurst(element, crop.theme);
