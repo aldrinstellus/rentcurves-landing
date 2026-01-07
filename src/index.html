@@ -62,12 +62,38 @@
 
  /* Separate transition for crop-item-inner to not interfere with shape animations */
  .crop-item-inner {
-            will-change: border-radius, transform;
-            will-change: border-radius, transform;
+ will-change: border-radius, transform;
+ backface-visibility: hidden;
  transition: background var(--theme-speed) ease,
  border-color var(--theme-speed) ease,
  box-shadow var(--theme-speed) ease,
  transform 0.3s ease !important;
+ }
+
+ /* ========================================
+ PERFORMANCE OPTIMIZATIONS
+ ======================================== */
+ /* Force GPU layers for animated elements */
+ .seed, .corn-kernel, .rice-grain, .canola-petal, .cotton-fluff,
+ .wheat-grain, .crop-item, .wheel-ring, .gradient-orb {
+ transform: translateZ(0);
+ backface-visibility: hidden;
+ }
+
+ /* Reduce paint complexity on particles */
+ .seed, .corn-kernel, .rice-grain, .canola-petal, .cotton-fluff {
+ contain: layout style paint;
+ }
+
+ /* Content visibility for below-fold sections */
+ .cta-section, .footer-section {
+ content-visibility: auto;
+ contain-intrinsic-size: 0 500px;
+ }
+
+ /* Optimize backdrop filters with isolation */
+ .glass-card, .crop-item-inner, .calculate-btn {
+ isolation: isolate;
  }
 
  html {
@@ -3406,20 +3432,18 @@
  // ===========================================
  function createSeeds() {
  const container = document.getElementById('seeds');
- const numSeeds = 25;
+ const numSeeds = 18; // Reduced for performance
  const colors = ['#10b981', '#34d399', '#6ee7b7', '#fbbf24', '#f59e0b'];
+ const fragment = document.createDocumentFragment(); // Batch DOM operations
 
  for (let i = 0; i < numSeeds; i++) {
  const seed = document.createElement('div');
  seed.className = 'seed';
- seed.style.left = Math.random() * 100 + '%';
- seed.style.animationDelay = Math.random() * 25 + 's';
- seed.style.animationDuration = (20 + Math.random() * 15) + 's';
- seed.style.background = colors[Math.floor(Math.random() * colors.length)];
- seed.style.width = (2 + Math.random() * 3) + 'px';
- seed.style.height = seed.style.width;
- container.appendChild(seed);
+ const size = (2 + Math.random() * 3) + 'px';
+ seed.style.cssText = `left:${Math.random() * 100}%;animation-delay:${Math.random() * 25}s;animation-duration:${20 + Math.random() * 15}s;background:${colors[Math.floor(Math.random() * colors.length)]};width:${size};height:${size}`;
+ fragment.appendChild(seed);
  }
+ container.appendChild(fragment); // Single DOM operation
  }
 
  // ===========================================
@@ -4328,72 +4352,47 @@
  }
  });
 
- // Clear intervals for old scenes
- Object.values(sceneIntervals).forEach(clearInterval);
+ // Clear animation frames for old scenes
+ Object.values(sceneIntervals).forEach(cancelAnimationFrame);
  sceneIntervals = {};
  }, 600); // Overlap duration for crossfade
 
  previousScene = newScene;
  currentCropScene = cropName;
 
- // Set up continuous particle spawning for some scenes
- // Performance optimized: increased intervals, reduced max particles
- if (cropName === 'Corn') {
- sceneIntervals['corn'] = setInterval(() => {
- const container = document.getElementById('corn-particles');
- if (container && container.children.length < 15) {
- const kernel = document.createElement('div');
- kernel.className = 'corn-kernel';
- kernel.style.left = (10 + Math.random() * 80) + '%';
- kernel.style.animationDuration = (6 + Math.random() * 4) + 's';
- container.appendChild(kernel);
- setTimeout(() => kernel.remove(), 12000);
- }
- }, 1000);
- }
+ // Performance-optimized particle spawning using requestAnimationFrame
+ // Only spawn when tab is visible, uses RAF for smooth timing
+ const particleConfig = {
+ Corn: { containerId: 'corn-particles', className: 'corn-kernel', max: 12, interval: 1200, duration: [6, 4], lifetime: 10000 },
+ Rice: { containerId: 'rice-particles', className: 'rice-grain', max: 15, interval: 600, duration: [4, 3], lifetime: 6000 },
+ Canola: { containerId: 'canola-particles', className: 'canola-petal', max: 12, interval: 1500, duration: [10, 6], lifetime: 14000, drift: true },
+ Cotton: { containerId: 'cotton-particles', className: 'cotton-fluff', max: 10, interval: 2000, duration: [15, 10], lifetime: 22000, drift: true }
+ };
 
- if (cropName === 'Rice') {
- sceneIntervals['rice'] = setInterval(() => {
- const container = document.getElementById('rice-particles');
- if (container && container.children.length < 20) {
- const grain = document.createElement('div');
- grain.className = 'rice-grain';
- grain.style.left = (5 + Math.random() * 90) + '%';
- grain.style.animationDuration = (4 + Math.random() * 3) + 's';
- container.appendChild(grain);
- setTimeout(() => grain.remove(), 7000);
+ const config = particleConfig[cropName];
+ if (config) {
+ let lastSpawn = 0;
+ const spawnParticle = (timestamp) => {
+ if (currentCropScene !== cropName) return; // Stop if scene changed
+ if (document.hidden) { // Skip if tab not visible
+ sceneIntervals[cropName] = requestAnimationFrame(spawnParticle);
+ return;
  }
- }, 500);
+ if (timestamp - lastSpawn >= config.interval) {
+ const container = document.getElementById(config.containerId);
+ if (container && container.children.length < config.max) {
+ const particle = document.createElement('div');
+ particle.className = config.className;
+ particle.style.cssText = `left:${5 + Math.random() * 90}%;animation-duration:${config.duration[0] + Math.random() * config.duration[1]}s`;
+ if (config.drift) particle.style.setProperty('--drift-x', (Math.random() * 160 - 80) + 'px');
+ container.appendChild(particle);
+ setTimeout(() => particle.remove(), config.lifetime);
  }
-
- if (cropName === 'Canola') {
- sceneIntervals['canola'] = setInterval(() => {
- const container = document.getElementById('canola-particles');
- if (container && container.children.length < 15) {
- const petal = document.createElement('div');
- petal.className = 'canola-petal';
- petal.style.left = (5 + Math.random() * 90) + '%';
- petal.style.setProperty('--drift-x', (Math.random() * 160 - 80) + 'px');
- petal.style.animationDuration = (10 + Math.random() * 6) + 's';
- container.appendChild(petal);
- setTimeout(() => petal.remove(), 16000);
+ lastSpawn = timestamp;
  }
- }, 1200);
- }
-
- if (cropName === 'Cotton') {
- sceneIntervals['cotton'] = setInterval(() => {
- const container = document.getElementById('cotton-particles');
- if (container && container.children.length < 12) {
- const fluff = document.createElement('div');
- fluff.className = 'cotton-fluff';
- fluff.style.left = Math.random() * 100 + '%';
- fluff.style.setProperty('--drift-x', (Math.random() * 200 - 100) + 'px');
- fluff.style.animationDuration = (15 + Math.random() * 10) + 's';
- container.appendChild(fluff);
- setTimeout(() => fluff.remove(), 25000);
- }
- }, 1800);
+ sceneIntervals[cropName] = requestAnimationFrame(spawnParticle);
+ };
+ sceneIntervals[cropName] = requestAnimationFrame(spawnParticle);
  }
  }
 
