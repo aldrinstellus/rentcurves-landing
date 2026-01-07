@@ -227,18 +227,26 @@
  Sophisticated SVG-based backgrounds
  ======================================== */
  .crop-scene {
-            will-change: opacity;
-            will-change: opacity;
+ will-change: opacity;
  position: fixed;
  inset: 0;
  pointer-events: none;
  z-index: 2;
  overflow: hidden;
  opacity: 0;
- transition: opacity 1.2s ease;
+ transition: opacity 1.5s ease-in-out;
  }
 
  .crop-scene.active {
+ opacity: 1;
+ }
+
+ .crop-scene.fading-in {
+ opacity: 0;
+ transition: opacity 0.8s ease-out;
+ }
+
+ .crop-scene.active.fading-in {
  opacity: 1;
  }
 
@@ -4334,13 +4342,13 @@
  config.initScene();
 
  // Add transitioning class for crossfade
- newScene.classList.add('active');
  newScene.classList.add('fading-in');
+ newScene.classList.add('active');
 
- // Remove fading-in class after animation starts
- setTimeout(() => newScene.classList.remove('fading-in'), 50);
+ // Remove fading-in class after fade completes
+ setTimeout(() => newScene.classList.remove('fading-in'), 800);
 
- // Fade out old scene after a delay (crossfade overlap)
+ // Fade out old scene after longer overlap for smooth crossfade
  fadeTimeout = setTimeout(() => {
  document.querySelectorAll('.crop-scene').forEach(s => {
  if (s !== newScene) {
@@ -4351,7 +4359,7 @@
  // Clear animation frames for old scenes
  Object.values(sceneIntervals).forEach(cancelAnimationFrame);
  sceneIntervals = {};
- }, 600); // Overlap duration for crossfade
+ }, 1200); // Longer overlap for smoother crossfade
 
  previousScene = newScene;
  currentCropScene = cropName;
