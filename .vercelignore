@@ -1,0 +1,8 @@
+# Ignore non-production files
+docs/
+assets/
+.github/
+README.md
+CHANGELOG.md
+LICENSE
+.gitignore
