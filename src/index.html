@@ -2827,10 +2827,20 @@
                             `0 0 40px ${item.crop.theme.glow}, inset 0 0 15px ${item.crop.theme.glow}`;
                         item.el.querySelector('.crop-item-inner').style.borderColor = item.crop.theme.secondary;
 
-                        // Hint at theme colors in spotlight
+                        // Apply FULL theme change when crop is in spotlight
                         if (spotlightCrop !== item.crop) {
                             spotlightCrop = item.crop;
                             hintThemeSpotlight(item.crop.theme);
+
+                            // Show spotlight crop name in center
+                            const centerPromptText = document.querySelector('.center-prompt-text');
+                            if (centerPromptText) {
+                                centerPromptText.textContent = item.crop.name;
+                                centerPromptText.style.color = item.crop.theme.accent;
+                                centerPromptText.style.fontSize = '1.2rem';
+                                centerPromptText.style.fontWeight = '600';
+                                centerPromptText.style.textShadow = `0 0 20px ${item.crop.theme.glow}`;
+                            }
                         }
                     } else if (!selectedCrop) {
                         // Reset non-spotlight crops
@@ -2846,10 +2856,32 @@
         }
 
         function hintThemeSpotlight(theme) {
-            // Subtle theme hint when crop is in spotlight
+            // Full theme change when crop is in spotlight during rotation
             const root = document.documentElement;
-            root.style.setProperty('--theme-bg-1', theme.bg1.replace('0.35', '0.15'));
-            root.style.setProperty('--theme-bg-2', theme.bg2.replace('0.25', '0.12'));
+
+            // Apply full theme colors to background orbs
+            root.style.setProperty('--theme-bg-1', theme.bg1);
+            root.style.setProperty('--theme-bg-2', theme.bg2);
+            root.style.setProperty('--theme-bg-3', theme.bg3);
+
+            // Update accent colors
+            root.style.setProperty('--theme-primary', theme.primary);
+            root.style.setProperty('--theme-secondary', theme.secondary);
+            root.style.setProperty('--theme-accent', theme.accent);
+            root.style.setProperty('--theme-glow', theme.glow);
+            root.style.setProperty('--theme-particle', theme.particle);
+
+            // Update floating seed particles with theme colors
+            const seeds = document.querySelectorAll('.seed');
+            seeds.forEach((seed, i) => {
+                seed.style.background = theme.seedColors[i % theme.seedColors.length];
+            });
+
+            // Update center display text hint
+            const centerPromptText = document.querySelector('.center-prompt-text');
+            if (centerPromptText && !selectedCrop) {
+                centerPromptText.style.color = theme.secondary;
+            }
         }
 
         function stopSpinAndSelect(crop, element) {
