@@ -1057,7 +1057,7 @@
             margin: 0 auto;
         }
 
-        /* Decorative ring */
+        /* Decorative ring - pronounced but elegant */
         .wheel-ring {
             position: absolute;
             top: 50%;
@@ -1065,17 +1065,44 @@
             width: 85%;
             height: 85%;
             transform: translate(-50%, -50%);
-            border: 1px dashed color-mix(in srgb, var(--theme-secondary) 20%, transparent);
+            border: 2px dashed color-mix(in srgb, var(--theme-secondary) 45%, transparent);
             border-radius: 50%;
             pointer-events: none;
+            animation: ring-rotate 60s linear infinite;
+            filter: drop-shadow(0 0 4px color-mix(in srgb, var(--theme-glow) 30%, transparent));
+        }
+
+        @keyframes ring-rotate {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(360deg); }
         }
 
         .wheel-ring::before {
             content: '';
             position: absolute;
-            inset: -20px;
-            border: 1px solid color-mix(in srgb, var(--theme-secondary) 10%, transparent);
+            inset: -25px;
+            border: 1.5px dashed color-mix(in srgb, var(--theme-secondary) 25%, transparent);
             border-radius: 50%;
+            animation: ring-rotate-reverse 90s linear infinite;
+        }
+
+        @keyframes ring-rotate-reverse {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(-360deg); }
+        }
+
+        .wheel-ring::after {
+            content: '';
+            position: absolute;
+            inset: 15px;
+            border: 1px dotted color-mix(in srgb, var(--theme-accent) 35%, transparent);
+            border-radius: 50%;
+            animation: ring-pulse 4s ease-in-out infinite;
+        }
+
+        @keyframes ring-pulse {
+            0%, 100% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.02); }
         }
 
         /* Center display */
