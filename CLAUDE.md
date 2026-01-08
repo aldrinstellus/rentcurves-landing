@@ -3,19 +3,27 @@
 ## Project Overview
 Interactive agricultural rent calculation landing page with casino-style engagement and 3D animations. Features a rotating crop wheel selector with morphing organic shapes.
 
+## Repository
+- **GitHub**: https://github.com/aldrinstellus/rentcurves-landing
+- **Production**: https://rentcurves-landing.vercel.app
+
 ## Quick Commands
 ```bash
 # Serve locally
 cd src && python3 -m http.server 8080
-# Then visit: http://localhost:8080/index.html
+# Visit: http://localhost:8080/index.html
 
 # Deploy to Vercel
 vercel --prod --yes
+
+# Commit and deploy
+git add -A && git commit -m "message" && git push origin main && vercel --prod --yes
 ```
 
 ## Live URLs
 - **Production**: https://rentcurves-landing.vercel.app
 - **Local Dev**: http://localhost:8080/index.html
+- **3D Version**: http://localhost:8080/index-3d.html
 
 ## Key Files
 | File | Purpose |
@@ -77,3 +85,23 @@ theme: {
 - Static site, no build step required
 - Vercel config in `vercel.json` handles routing
 - All CDN dependencies load externally
+
+## Key Code Locations (index.html)
+| Line | Content |
+|------|---------|
+| ~1291 | `.crop-item-inner` base styles |
+| ~1304 | Transition property (exclude border-radius!) |
+| ~1337-1411 | Crop morph keyframe animations |
+| ~1413-1436 | Crop-specific animation assignments |
+| ~3248 | `cropsData` array with all crop definitions |
+| ~3475 | `initWheel()` function |
+| ~3870 | `startAutoRotation()` function |
+
+## Testing Checklist
+- [ ] Crop shapes morph smoothly (organic shapes, not circles)
+- [ ] Wheel auto-rotates on page load
+- [ ] Spotlight highlights top crop
+- [ ] Click stops rotation and selects crop
+- [ ] Theme colors change per crop
+- [ ] Calculate button reveals rent with animation
+- [ ] Mobile responsive layout works
