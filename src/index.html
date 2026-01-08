@@ -1978,6 +1978,259 @@
  }
 
  /* ========================================
+ EFFECTIVE YIELD DISPLAY
+ ======================================== */
+ .effective-yield {
+ display: none;
+ align-items: center;
+ justify-content: center;
+ gap: 0.5rem;
+ margin-top: 1rem;
+ padding: 0.75rem 1.5rem;
+ background: rgba(255, 255, 255, 0.05);
+ border-radius: 100px;
+ border: 1px solid rgba(255, 255, 255, 0.1);
+ }
+
+ .effective-yield.visible {
+ display: flex;
+ animation: fadeInUp 0.5s ease;
+ }
+
+ .yield-label {
+ color: var(--sage-light);
+ font-size: 0.85rem;
+ }
+
+ .yield-value {
+ color: var(--theme-accent);
+ font-size: 1.1rem;
+ font-weight: 700;
+ }
+
+ .yield-unit {
+ color: var(--sage);
+ font-size: 0.8rem;
+ }
+
+ @keyframes fadeInUp {
+ from { opacity: 0; transform: translateY(10px); }
+ to { opacity: 1; transform: translateY(0); }
+ }
+
+ /* ========================================
+ LEAD CAPTURE FORM
+ ======================================== */
+ .lead-capture {
+ margin-top: 2.5rem;
+ opacity: 0;
+ transform: translateY(20px);
+ transition: all 0.6s ease;
+ display: none;
+ }
+
+ .lead-capture.visible {
+ opacity: 1;
+ transform: translateY(0);
+ display: block;
+ }
+
+ .lead-capture-inner {
+ background: linear-gradient(145deg, rgba(13, 38, 30, 0.95) 0%, rgba(7, 20, 16, 0.98) 100%);
+ border: 1px solid rgba(255, 255, 255, 0.1);
+ border-radius: 20px;
+ padding: 2rem;
+ max-width: 500px;
+ margin: 0 auto;
+ backdrop-filter: blur(20px);
+ }
+
+ .lead-title {
+ color: var(--cream);
+ font-size: 1.3rem;
+ font-weight: 600;
+ margin-bottom: 0.5rem;
+ text-align: center;
+ }
+
+ .lead-subtitle {
+ color: var(--sage-light);
+ font-size: 0.9rem;
+ text-align: center;
+ margin-bottom: 1.5rem;
+ }
+
+ .lead-form {
+ display: flex;
+ flex-direction: column;
+ gap: 1rem;
+ }
+
+ .form-row {
+ display: flex;
+ gap: 1rem;
+ }
+
+ .lead-input {
+ flex: 1;
+ padding: 0.9rem 1.2rem;
+ background: rgba(255, 255, 255, 0.05);
+ border: 1px solid rgba(255, 255, 255, 0.1);
+ border-radius: 12px;
+ color: var(--cream);
+ font-size: 0.95rem;
+ font-family: inherit;
+ transition: all 0.3s ease;
+ }
+
+ .lead-input::placeholder {
+ color: var(--sage);
+ }
+
+ .lead-input:focus {
+ outline: none;
+ border-color: var(--theme-accent);
+ background: rgba(255, 255, 255, 0.08);
+ box-shadow: 0 0 20px var(--theme-glow);
+ }
+
+ .lead-input-full {
+ width: 100%;
+ }
+
+ .lead-submit {
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ gap: 0.75rem;
+ padding: 1rem 2rem;
+ background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-secondary) 100%);
+ color: var(--midnight);
+ border: none;
+ border-radius: 12px;
+ font-size: 1rem;
+ font-weight: 600;
+ cursor: pointer;
+ transition: all 0.3s ease;
+ margin-top: 0.5rem;
+ }
+
+ .lead-submit:hover {
+ transform: translateY(-2px);
+ box-shadow: 0 10px 30px var(--theme-glow);
+ }
+
+ .lead-submit svg {
+ width: 18px;
+ height: 18px;
+ transition: transform 0.3s ease;
+ }
+
+ .lead-submit:hover svg {
+ transform: translateX(4px);
+ }
+
+ .lead-success {
+ display: none;
+ align-items: center;
+ justify-content: center;
+ gap: 0.75rem;
+ padding: 1.5rem;
+ color: var(--theme-accent);
+ font-size: 1.1rem;
+ font-weight: 500;
+ }
+
+ .lead-success.visible {
+ display: flex;
+ animation: fadeInUp 0.5s ease;
+ }
+
+ .lead-success svg {
+ width: 28px;
+ height: 28px;
+ stroke: var(--theme-accent);
+ }
+
+ /* ========================================
+ COOKIE CONSENT BANNER
+ ======================================== */
+ .cookie-consent {
+ position: fixed;
+ bottom: 0;
+ left: 0;
+ right: 0;
+ background: rgba(7, 20, 16, 0.98);
+ border-top: 1px solid rgba(255, 255, 255, 0.1);
+ padding: 1rem 2rem;
+ z-index: 9999;
+ transform: translateY(100%);
+ transition: transform 0.4s ease;
+ backdrop-filter: blur(20px);
+ }
+
+ .cookie-consent.visible {
+ transform: translateY(0);
+ }
+
+ .cookie-inner {
+ max-width: 1200px;
+ margin: 0 auto;
+ display: flex;
+ align-items: center;
+ justify-content: space-between;
+ gap: 2rem;
+ flex-wrap: wrap;
+ }
+
+ .cookie-text {
+ color: var(--sage-light);
+ font-size: 0.9rem;
+ flex: 1;
+ min-width: 200px;
+ }
+
+ .cookie-text a {
+ color: var(--theme-accent);
+ text-decoration: underline;
+ }
+
+ .cookie-buttons {
+ display: flex;
+ gap: 1rem;
+ }
+
+ .cookie-btn {
+ padding: 0.6rem 1.5rem;
+ border-radius: 8px;
+ font-size: 0.85rem;
+ font-weight: 600;
+ cursor: pointer;
+ transition: all 0.3s ease;
+ border: none;
+ }
+
+ .cookie-accept {
+ background: var(--theme-primary);
+ color: var(--midnight);
+ }
+
+ .cookie-accept:hover {
+ background: var(--theme-secondary);
+ }
+
+ .cookie-decline {
+ background: transparent;
+ color: var(--sage-light);
+ border: 1px solid var(--sage);
+ }
+
+ .cookie-decline:hover {
+ border-color: var(--cream);
+ color: var(--cream);
+ }
+
+ /* ========================================
  RESPONSIVE - COMPREHENSIVE
  ======================================== */
 
@@ -3219,6 +3472,41 @@
  <div class="rent-value" id="rentValue">$0.00</div>
  </div>
  <div class="rent-unit">per acre / per year</div>
+ <div class="effective-yield" id="effectiveYield">
+ <span class="yield-label">Effective Yield:</span>
+ <span class="yield-value" id="yieldValue">--</span>
+ <span class="yield-unit">bu/acre</span>
+ </div>
+ </div>
+ </div>
+
+ <!-- Lead Capture Form -->
+ <div class="lead-capture" id="leadCapture">
+ <div class="lead-capture-inner">
+ <h3 class="lead-title">Want a Personalized Analysis?</h3>
+ <p class="lead-subtitle">Get custom rent calculations for your specific fields</p>
+ <form class="lead-form" id="leadForm">
+ <div class="form-row">
+ <input type="text" name="name" placeholder="Your Name" required class="lead-input">
+ <input type="email" name="email" placeholder="Email Address" required class="lead-input">
+ </div>
+ <input type="tel" name="phone" placeholder="Phone (Optional)" class="lead-input lead-input-full">
+ <input type="hidden" name="source" id="leadSource" value="">
+ <input type="hidden" name="crop" id="leadCrop" value="">
+ <input type="hidden" name="rent" id="leadRent" value="">
+ <button type="submit" class="lead-submit">
+ <span>Get My Free Analysis</span>
+ <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+ <path d="M5 12h14M12 5l7 7-7 7"/>
+ </svg>
+ </button>
+ </form>
+ <div class="lead-success" id="leadSuccess">
+ <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+ <path d="M20 6L9 17l-5-5"/>
+ </svg>
+ <span>Thank you! We'll be in touch soon.</span>
+ </div>
  </div>
  </div>
 
@@ -3641,10 +3929,24 @@
  calcButton.classList.add('calculating');
 
  try {
- // TODO: Replace with actual API call
+ // Simulate API delay
  await new Promise(resolve => setTimeout(resolve, 1800));
- const rentAmount = calculateMockRent(selectedCrop);
+
+ // Get rent and effective yield from API (or mock for now)
+ const result = await calculateRentFromAPI(selectedCrop);
+ const rentAmount = result.rent;
+ const effectiveYieldValue = result.effectiveYield;
+
+ // Show the rent result
  showRentResult(rentAmount);
+
+ // Show effective yield after a delay
+ setTimeout(() => {
+   showEffectiveYield(effectiveYieldValue);
+ }, 1000);
+
+ // Show lead capture form after reveal animation completes
+ showLeadCapture(selectedCrop.name, rentAmount.toFixed(2));
  } catch (error) {
  console.error('API Error:', error);
  } finally {
@@ -4727,14 +5029,206 @@
  }
 
  // ===========================================
+ // Lead Capture Form Handling
+ // ===========================================
+ function initLeadCapture() {
+   const leadForm = document.getElementById('leadForm');
+   const leadCapture = document.getElementById('leadCapture');
+   const leadSuccess = document.getElementById('leadSuccess');
+
+   if (!leadForm) return;
+
+   leadForm.addEventListener('submit', async (e) => {
+     e.preventDefault();
+
+     const formData = new FormData(leadForm);
+     const data = Object.fromEntries(formData);
+
+     // Add UTM parameters from URL
+     const urlParams = new URLSearchParams(window.location.search);
+     data.utm_source = urlParams.get('utm_source') || '';
+     data.utm_medium = urlParams.get('utm_medium') || '';
+     data.utm_campaign = urlParams.get('utm_campaign') || '';
+     data.utm_content = urlParams.get('utm_content') || '';
+
+     // Disable button during submission
+     const submitBtn = leadForm.querySelector('.lead-submit');
+     submitBtn.disabled = true;
+     submitBtn.innerHTML = '<span>Sending...</span>';
+
+     try {
+       // TODO: Replace with actual CRM endpoint (Pipedrive, etc.)
+       // await fetch('/api/lead', { method: 'POST', body: JSON.stringify(data), headers: { 'Content-Type': 'application/json' } });
+
+       // Simulate API call
+       await new Promise(resolve => setTimeout(resolve, 1000));
+
+       // Show success state
+       leadForm.style.display = 'none';
+       leadSuccess.classList.add('visible');
+
+       // Track conversion (for analytics)
+       if (typeof gtag !== 'undefined') {
+         gtag('event', 'lead_capture', { crop: data.crop, rent: data.rent });
+       }
+     } catch (error) {
+       console.error('Lead submission failed:', error);
+       submitBtn.disabled = false;
+       submitBtn.innerHTML = '<span>Get My Free Analysis</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
+       alert('Something went wrong. Please try again.');
+     }
+   });
+ }
+
+ // Show lead capture form after rent reveal
+ function showLeadCapture(cropName, rentValue) {
+   const leadCapture = document.getElementById('leadCapture');
+   const leadCrop = document.getElementById('leadCrop');
+   const leadRent = document.getElementById('leadRent');
+
+   if (leadCapture && leadCrop && leadRent) {
+     leadCrop.value = cropName;
+     leadRent.value = rentValue;
+
+     // Delay showing form for dramatic effect
+     setTimeout(() => {
+       leadCapture.classList.add('visible');
+     }, 2500);
+   }
+ }
+
+ // ===========================================
+ // Cookie Consent Banner
+ // ===========================================
+ function initCookieConsent() {
+   const banner = document.getElementById('cookieConsent');
+   if (!banner) return;
+
+   // Check if already consented
+   if (localStorage.getItem('cookieConsent')) {
+     banner.style.display = 'none';
+     return;
+   }
+
+   // Show banner after short delay
+   setTimeout(() => {
+     banner.classList.add('visible');
+   }, 2000);
+
+   // Handle accept
+   const acceptBtn = document.getElementById('acceptCookies');
+   if (acceptBtn) {
+     acceptBtn.addEventListener('click', () => {
+       localStorage.setItem('cookieConsent', 'accepted');
+       banner.classList.remove('visible');
+       setTimeout(() => { banner.style.display = 'none'; }, 300);
+     });
+   }
+
+   // Handle decline
+   const declineBtn = document.getElementById('declineCookies');
+   if (declineBtn) {
+     declineBtn.addEventListener('click', () => {
+       localStorage.setItem('cookieConsent', 'declined');
+       banner.classList.remove('visible');
+       setTimeout(() => { banner.style.display = 'none'; }, 300);
+     });
+   }
+ }
+
+ // ===========================================
+ // Effective Yield Display
+ // ===========================================
+ function showEffectiveYield(yieldValue) {
+   const effectiveYield = document.getElementById('effectiveYield');
+   const yieldValueEl = document.getElementById('yieldValue');
+
+   if (effectiveYield && yieldValueEl) {
+     yieldValueEl.textContent = yieldValue.toFixed(1);
+     effectiveYield.classList.add('visible');
+
+     // Animate number counting
+     if (typeof anime !== 'undefined') {
+       anime({
+         targets: { val: 0 },
+         val: yieldValue,
+         duration: 1500,
+         easing: 'easeOutExpo',
+         update: (anim) => {
+           yieldValueEl.textContent = anim.animations[0].currentValue.toFixed(1);
+         }
+       });
+     }
+   }
+ }
+
+ // ===========================================
+ // API Integration (Prepared Structure)
+ // ===========================================
+ async function calculateRentFromAPI(cropData) {
+   // API endpoint - TODO: Replace with actual Laravel API URL
+   const API_ENDPOINT = '/api/calculate-rent';
+
+   const inputs = cropData.inputs || {};
+   const payload = {
+     // 5 Main inputs
+     price: inputs.price || 0,
+     harvestYield: inputs.harvestYield || 0,
+     cost: inputs.cost || 0,
+     highYield: inputs.highYield || 0,
+     avgYield: inputs.avgYield || 0,
+
+     // 4 Insurance fields
+     basePrice: cropData.apiData?.basePrice || 0,
+     coverageLevel: cropData.apiData?.coverageLevel || 0,
+     premium: cropData.apiData?.premium || 0,
+     insuranceShared: cropData.apiData?.insuranceShared || false
+   };
+
+   try {
+     // TODO: Uncomment when API is ready
+     // const response = await fetch(API_ENDPOINT, {
+     //   method: 'POST',
+     //   headers: { 'Content-Type': 'application/json' },
+     //   body: JSON.stringify(payload)
+     // });
+     // const data = await response.json();
+     // return { rent: data.rent, effectiveYield: data.effectiveYield };
+
+     // Mock calculation for now
+     const rent = (payload.price * payload.harvestYield / 100 - payload.cost) * 0.35;
+     const effectiveYield = payload.harvestYield * (1 + (payload.coverageLevel / 100) * 0.1);
+
+     return { rent: Math.max(0, rent), effectiveYield };
+   } catch (error) {
+     console.error('API calculation failed:', error);
+     throw error;
+   }
+ }
+
+ // ===========================================
  document.addEventListener('DOMContentLoaded', () => {
  initWheel();
- setupCropItemHandlers(); // Setup click handlers after wheel items exist
+ setupCropItemHandlers();
  createSeeds();
+ initLeadCapture();
+ initCookieConsent();
  // Start auto-rotation after wheel is initialized
  setTimeout(() => { initAutoRotation(); initWheelDrag(); }, 100);
  });
  </script>
+<!-- Cookie Consent Banner -->
+<div class="cookie-consent" id="cookieConsent">
+  <div class="cookie-content">
+    <span class="cookie-icon">🍪</span>
+    <p class="cookie-text">We use cookies to enhance your experience and analyze site traffic. By continuing, you agree to our use of cookies.</p>
+  </div>
+  <div class="cookie-buttons">
+    <button class="cookie-btn cookie-decline" id="declineCookies">Decline</button>
+    <button class="cookie-btn cookie-accept" id="acceptCookies">Accept</button>
+  </div>
+</div>
+
 <script src="nextgen.js"></script>
 </body>
 </html>
