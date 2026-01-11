@@ -119,7 +119,7 @@
       }
     });
 
-    // 3D tilt effect on hero section
+    // 3D tilt effect on hero section (Performance Optimized)
     const heroContent = document.querySelector('.hero-content');
     const hero = document.querySelector('.hero');
 
@@ -127,20 +127,27 @@
       heroContent.style.transformStyle = 'preserve-3d';
       heroContent.style.perspective = '1000px';
 
+      let heroTiltRAF = null;
+      let heroX = 0, heroY = 0;
+
       hero.addEventListener('mousemove', (e) => {
         const rect = hero.getBoundingClientRect();
-        const x = (e.clientX - rect.left - rect.width / 2) / 40;
-        const y = (e.clientY - rect.top - rect.height / 2) / 40;
+        heroX = (e.clientX - rect.left - rect.width / 2) / 40;
+        heroY = (e.clientY - rect.top - rect.height / 2) / 40;
 
-        gsap.to(heroContent, {
-          rotateY: x,
-          rotateX: -y,
-          duration: 0.4,
-          ease: 'power2.out'
-        });
+        if (!heroTiltRAF) {
+          heroTiltRAF = requestAnimationFrame(() => {
+            gsap.set(heroContent, { rotateY: heroX, rotateX: -heroY });
+            heroTiltRAF = null;
+          });
+        }
       });
 
       hero.addEventListener('mouseleave', () => {
+        if (heroTiltRAF) {
+          cancelAnimationFrame(heroTiltRAF);
+          heroTiltRAF = null;
+        }
         gsap.to(heroContent, {
           rotateY: 0,
           rotateX: 0,
@@ -257,7 +264,7 @@
   }
 
   // ===========================================
-  // PHASE 7: CUSTOM CURSOR
+  // PHASE 7: CUSTOM CURSOR (Performance Optimized)
   // ===========================================
 
   function initCustomCursor() {
@@ -276,6 +283,7 @@
         pointer-events: none;
         z-index: 99999;
         mix-blend-mode: difference;
+        will-change: transform;
       }
       .cursor-dot {
         width: 8px;
@@ -311,14 +319,20 @@
     `;
     document.head.appendChild(cursorStyles);
 
-    // Track cursor position
+    // Track cursor position with RAF throttling for performance
+    let cursorX = 0, cursorY = 0;
+    let cursorRAF = null;
+
     document.addEventListener('mousemove', (e) => {
-      gsap.to(cursor, {
-        x: e.clientX,
-        y: e.clientY,
-        duration: 0.15,
-        ease: 'power2.out'
-      });
+      cursorX = e.clientX;
+      cursorY = e.clientY;
+
+      if (!cursorRAF) {
+        cursorRAF = requestAnimationFrame(() => {
+          gsap.set(cursor, { x: cursorX, y: cursorY }); // Use set instead of to for instant update
+          cursorRAF = null;
+        });
+      }
     });
 
     // Hover effects on interactive elements

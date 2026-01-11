@@ -84,6 +84,27 @@
  contain: layout style paint;
  }
 
+/* Contain layout for major sections */
+.crop-scene { contain: layout style paint; }
+.atmosphere { contain: strict; }
+.wheel-container { contain: layout; }
+.header { contain: layout style; }
+
+/* PERFORMANCE MODE - For low-end devices */
+.performance-mode .gradient-orb { animation: none !important; opacity: 0.4; }
+.performance-mode .center-glow { animation: none !important; }
+.performance-mode .seed { animation-duration: 40s !important; }
+.performance-mode .corn-kernel,
+.performance-mode .wheat-grain,
+.performance-mode .rice-grain,
+.performance-mode .canola-petal,
+.performance-mode .cotton-fluff { display: none !important; }
+.performance-mode .crop-item-inner { animation-duration: 25s !important; }
+.performance-mode .corn-rays { animation: none !important; }
+.performance-mode .theme-gradient { transition: none !important; }
+.performance-mode .custom-cursor { display: none !important; }
+.performance-mode body { cursor: auto !important; }
+
  /* ========================================
  SCROLLBAR HIDING - ALL BROWSERS
  ======================================== */
@@ -158,7 +179,7 @@
  transform: translate3d(-50%, -50%, 0);
  background: radial-gradient(circle, var(--theme-glow) 0%, transparent 60%);
  opacity: 0.4;
- filter: blur(60px);
+ filter: blur(20px);
  transition: background 0.6s ease, opacity 0.6s ease;
  animation: pulse-glow 4s ease-in-out infinite alternate;
  }
@@ -183,7 +204,7 @@
  .gradient-orb {
  position: absolute;
  border-radius: 50%;
- filter: blur(80px);
+ filter: blur(30px);
  opacity: 0.8;
  animation: float-orb 20s ease-in-out infinite;
  transition: background 0.6s ease;
@@ -3004,7 +3025,7 @@
 
  /* Simplify gradient orbs on mobile */
  .gradient-orb {
- filter: blur(80px);
+ filter: blur(30px);
  opacity: 0.3;
  }
 
@@ -3245,19 +3266,6 @@
         }
 
     
-        /* Respect user's motion preferences for accessibility and performance */
-        @media (prefers-reduced-motion: reduce) {
-            *, *::before, *::after {
-                animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: 0.01ms !important;
-            }
-            .seed, .crop-scene-particle, .corn-kernel, .wheat-grain,
-            .canola-petal, .cotton-fluff, .rice-grain {
-                display: none !important;
-            }
-        }
-
     </style>
 </head>
 
@@ -3265,7 +3273,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
     <script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
-</head>
 <body>
  <!-- Atmospheric Background - Dynamic Theme -->
  <div class="atmosphere">
@@ -3730,7 +3737,7 @@
  // ===========================================
  function createSeeds() {
  const container = document.getElementById('seeds');
- const numSeeds = 12; // Minimal for smooth performance
+ const numSeeds = 8; // Minimal for smooth performance
  const colors = ['#10b981', '#34d399', '#6ee7b7', '#fbbf24', '#f59e0b'];
  const fragment = document.createDocumentFragment(); // Batch DOM operations
 
@@ -4068,7 +4075,7 @@
  function createCelebration(theme) {
  // Use theme colors for celebration particles
  const colors = theme ? theme.seedColors : ['#fbbf24', '#f59e0b', '#d97706', '#10b981', '#34d399'];
- const numParticles = 80; // More particles for bigger celebration
+ const numParticles = 40; // More particles for bigger celebration
 
  for (let i = 0; i < numParticles; i++) {
  const particle = document.createElement('div');
@@ -4124,7 +4131,7 @@
  const centerY = rect.height / 2;
 
  // Create 8 orbiting particles
- for (let i = 0; i < 8; i++) {
+ for (let i = 0; i < 4; i++) {
  const particle = document.createElement('div');
  particle.className = 'crop-highlight-particle';
 
@@ -4173,7 +4180,7 @@
  const radius = getWheelRadius();
 
  function animate() {
- if (!isSpinning) return;
+ if (!isSpinning || document.hidden) return;
 
  wheelRotation += spinSpeed;
 
@@ -4304,7 +4311,7 @@
  }
 
  // Create enhanced falling kernels with trails
- for (let i = 0; i < 25; i++) {
+ for (let i = 0; i < 12; i++) {
  setTimeout(() => {
  const kernel = document.createElement('div');
  kernel.className = 'corn-kernel';
@@ -4316,7 +4323,7 @@
  }
 
  // Create golden pollen/dust with shimmer
- for (let i = 0; i < 40; i++) {
+ for (let i = 0; i < 4; i++) {
  const dust = document.createElement('div');
  dust.className = 'corn-dust';
  dust.style.left = Math.random() * 100 + '%';
@@ -4327,7 +4334,7 @@
  }
 
  // Create floating corn silk strands
- for (let i = 0; i < 15; i++) {
+ for (let i = 0; i < 4; i++) {
  const silk = document.createElement('div');
  silk.className = 'corn-silk';
  silk.style.left = (10 + Math.random() * 80) + '%';
@@ -4339,7 +4346,7 @@
  }
 
  // Create golden sparkles/fireflies
- for (let i = 0; i < 20; i++) {
+ for (let i = 0; i < 10; i++) {
  const sparkle = document.createElement('div');
  sparkle.className = 'corn-sparkle';
  sparkle.style.left = Math.random() * 100 + '%';
@@ -4380,7 +4387,7 @@
  }
 
  // Create floating pods
- for (let i = 0; i < 15; i++) {
+ for (let i = 0; i < 4; i++) {
  setTimeout(() => {
  const pod = document.createElement('div');
  pod.className = 'soybean-pod';
@@ -4414,7 +4421,7 @@
  particlesContainer.innerHTML = '';
 
  // Create wheat field - dense stalks
- for (let i = 0; i < 40; i++) {
+ for (let i = 0; i < 4; i++) {
  const stalk = document.createElement('div');
  stalk.className = 'wheat-stalk';
  stalk.style.left = (i * 2.5 + Math.random() * 2) + '%';
@@ -4426,7 +4433,7 @@
  }
 
  // Create floating grain particles
- for (let i = 0; i < 25; i++) {
+ for (let i = 0; i < 12; i++) {
  setTimeout(() => {
  const grain = document.createElement('div');
  grain.className = 'wheat-grain';
@@ -4486,7 +4493,7 @@
  });
 
  // Create falling petals
- for (let i = 0; i < 20; i++) {
+ for (let i = 0; i < 10; i++) {
  setTimeout(() => {
  const petal = document.createElement('div');
  petal.className = 'canola-petal';
@@ -4535,7 +4542,7 @@
  });
 
  // Create floating cotton fluff
- for (let i = 0; i < 15; i++) {
+ for (let i = 0; i < 4; i++) {
  setTimeout(() => {
  const fluff = document.createElement('div');
  fluff.className = 'cotton-fluff';
@@ -4548,7 +4555,7 @@
  }
 
  // Create wispy lines
- for (let i = 0; i < 8; i++) {
+ for (let i = 0; i < 4; i++) {
  const wisp = document.createElement('div');
  wisp.className = 'cotton-wisp';
  wisp.style.top = (20 + Math.random() * 60) + '%';
@@ -4568,7 +4575,7 @@
  particlesContainer.innerHTML = '';
 
  // Create rice paddy stalks
- for (let i = 0; i < 30; i++) {
+ for (let i = 0; i < 15; i++) {
  const stalk = document.createElement('div');
  stalk.className = 'rice-stalk';
  stalk.style.left = (i * 3.3 + Math.random() * 2) + '%';
@@ -4588,7 +4595,7 @@
  }
 
  // Create falling rice grains
- for (let i = 0; i < 30; i++) {
+ for (let i = 0; i < 15; i++) {
  setTimeout(() => {
  const grain = document.createElement('div');
  grain.className = 'rice-grain';
@@ -4600,7 +4607,7 @@
  }
 
  // Create water drops
- for (let i = 0; i < 20; i++) {
+ for (let i = 0; i < 10; i++) {
  setTimeout(() => {
  const drop = document.createElement('div');
  drop.className = 'water-drop';
@@ -4612,7 +4619,7 @@
  }
 
  // Create ripple effects at bottom
- for (let i = 0; i < 8; i++) {
+ for (let i = 0; i < 4; i++) {
  const ripple = document.createElement('div');
  ripple.className = 'ripple-ring';
  ripple.style.left = (10 + Math.random() * 80) + '%';
@@ -4806,7 +4813,7 @@
  const centerX = rect.left + rect.width / 2;
  const centerY = rect.top + rect.height / 2;
 
- for (let i = 0; i < 20; i++) {
+ for (let i = 0; i < 10; i++) {
  const particle = document.createElement('div');
  particle.style.cssText = `
  position: fixed;
@@ -5207,7 +5214,37 @@
  }
 
  // ===========================================
+// PERFORMANCE: Page Visibility API - Pause animations when tab is hidden
+let isPageVisible = true;
+document.addEventListener('visibilitychange', () => {
+  isPageVisible = !document.hidden;
+  if (document.hidden) {
+    isSpinning = false;
+    Object.values(sceneIntervals).forEach(id => cancelAnimationFrame(id));
+  } else if (!selectedCrop && !isDragging) {
+    isSpinning = true;
+    startAutoRotation();
+  }
+});
+
+// PERFORMANCE: Low-end device detection
+function isLowEndDevice() {
+  const cores = navigator.hardwareConcurrency || 4;
+  const memory = navigator.deviceMemory || 4;
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  return cores <= 4 || memory <= 4 || isMobile;
+}
+
+function applyPerformanceMode() {
+  if (isLowEndDevice()) {
+    document.body.classList.add('performance-mode');
+    document.documentElement.style.setProperty('--morph-speed', '20s');
+    console.log('Performance mode enabled');
+  }
+}
+
  document.addEventListener('DOMContentLoaded', () => {
+applyPerformanceMode();
  initWheel();
  setupCropItemHandlers();
  createSeeds();
