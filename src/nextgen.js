@@ -31,8 +31,8 @@
         orientation: 'vertical',
         gestureOrientation: 'vertical',
         smoothWheel: true,
-        wheelMultiplier: 1,
-        touchMultiplier: 2,
+        wheelMultiplier: 1.2,
+        touchMultiplier: 1.2,
       });
 
       // Connect Lenis to GSAP ScrollTrigger
