@@ -119,7 +119,7 @@
       }
     });
 
-    // 3D tilt effect on hero section (Performance Optimized)
+    // 3D tilt effect on hero section
     const heroContent = document.querySelector('.hero-content');
     const hero = document.querySelector('.hero');
 
@@ -128,26 +128,24 @@
       heroContent.style.perspective = '1000px';
 
       let heroTiltRAF = null;
-      let heroX = 0, heroY = 0;
-
       hero.addEventListener('mousemove', (e) => {
+        if (heroTiltRAF) return;
+        heroTiltRAF = requestAnimationFrame(() => {
         const rect = hero.getBoundingClientRect();
-        heroX = (e.clientX - rect.left - rect.width / 2) / 40;
-        heroY = (e.clientY - rect.top - rect.height / 2) / 40;
+        const x = (e.clientX - rect.left - rect.width / 2) / 40;
+        const y = (e.clientY - rect.top - rect.height / 2) / 40;
 
-        if (!heroTiltRAF) {
-          heroTiltRAF = requestAnimationFrame(() => {
-            gsap.set(heroContent, { rotateY: heroX, rotateX: -heroY });
-            heroTiltRAF = null;
-          });
-        }
+        gsap.to(heroContent, {
+          rotateY: x,
+          rotateX: -y,
+          duration: 0.4,
+          ease: 'power2.out'
+        });
+          heroTiltRAF = null;
+        });
       });
 
       hero.addEventListener('mouseleave', () => {
-        if (heroTiltRAF) {
-          cancelAnimationFrame(heroTiltRAF);
-          heroTiltRAF = null;
-        }
         gsap.to(heroContent, {
           rotateY: 0,
           rotateX: 0,
@@ -264,7 +262,7 @@
   }
 
   // ===========================================
-  // PHASE 7: CUSTOM CURSOR (Performance Optimized)
+  // PHASE 7: CUSTOM CURSOR
   // ===========================================
 
   function initCustomCursor() {
@@ -283,7 +281,6 @@
         pointer-events: none;
         z-index: 99999;
         mix-blend-mode: difference;
-        will-change: transform;
       }
       .cursor-dot {
         width: 8px;
@@ -319,20 +316,14 @@
     `;
     document.head.appendChild(cursorStyles);
 
-    // Track cursor position with RAF throttling for performance
-    let cursorX = 0, cursorY = 0;
+    // Track cursor position (throttled for performance)
     let cursorRAF = null;
-
     document.addEventListener('mousemove', (e) => {
-      cursorX = e.clientX;
-      cursorY = e.clientY;
-
-      if (!cursorRAF) {
-        cursorRAF = requestAnimationFrame(() => {
-          gsap.set(cursor, { x: cursorX, y: cursorY }); // Use set instead of to for instant update
-          cursorRAF = null;
-        });
-      }
+      if (cursorRAF) return;
+      cursorRAF = requestAnimationFrame(() => {
+        gsap.set(cursor, { x: e.clientX, y: e.clientY });
+        cursorRAF = null;
+      });
     });
 
     // Hover effects on interactive elements
@@ -630,12 +621,32 @@
   // INITIALIZE ON DOM READY
   // ===========================================
 
+  function waitForReadyAndInit() {
+    // Wait for main script to finish (js-ready class indicates initialization complete)
+    if (document.body.classList.contains('js-ready')) {
+      init();
+    } else {
+      // Use MutationObserver to detect when js-ready is added
+      const observer = new MutationObserver((mutations) => {
+        if (document.body.classList.contains('js-ready')) {
+          observer.disconnect();
+          init();
+        }
+      });
+      observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+
+      // Fallback: if js-ready never added after 2 seconds, init anyway
+      setTimeout(() => {
+        observer.disconnect();
+        if (typeof gsap !== 'undefined') init();
+      }, 2000);
+    }
+  }
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-      setTimeout(init, 100); // Small delay to ensure main script runs first
-    });
+    document.addEventListener('DOMContentLoaded', waitForReadyAndInit);
   } else {
-    setTimeout(init, 100);
+    waitForReadyAndInit();
   }
 
 })();
