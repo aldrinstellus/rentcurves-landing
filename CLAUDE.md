@@ -81,6 +81,14 @@ theme: {
 - `.hero-description` not found warning is benign (optional element)
 - Animations still initialize correctly
 
+### Animation looks sparse/dumbed down
+- **Cause**: Aggressive performance optimizations reduced particle counts
+- **Fix**: Keep blur values at 60px/80px, maintain full particle counts:
+  - Wheat: 40 stalks, 25 grains
+  - Corn: 12 stalks, 30 kernels
+  - Other crops: similar full counts
+- **Note**: RAF throttling and visibility API pausing are good optimizations to keep
+
 ## Deployment
 - Static site, no build step required
 - Vercel config in `vercel.json` handles routing
