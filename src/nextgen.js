@@ -62,32 +62,7 @@
   // ===========================================
 
   function initHeroAnimations() {
-    // Split text animation for hero title
-    const heroTitle = document.querySelector('.hero-title');
-    if (heroTitle) {
-      // Get text content only (strips HTML tags)
-      const textContent = heroTitle.textContent.trim();
-      const words = textContent.split(/\s+/).filter(w => w.length > 0);
-
-      // Rebuild with animated letters
-      heroTitle.innerHTML = words.map(word => {
-        const letters = word.split('').map(letter =>
-          `<span class="hero-letter" style="display: inline-block;">${letter}</span>`
-        ).join('');
-        return `<span class="hero-word" style="display: inline-block; margin-right: 0.25em;">${letters}</span>`;
-      }).join(' ');
-
-      // Animate letters with stagger
-      gsap.from('.hero-letter', {
-        y: 50,
-        opacity: 0,
-        rotationX: -60,
-        stagger: 0.02,
-        duration: 0.5,
-        ease: 'back.out(1.5)',
-        delay: 0.3
-      });
-    }
+    // Hero title - no animation, keep original HTML
 
     // Hero tag entrance
     gsap.from('.hero-tag', {
@@ -604,16 +579,7 @@
         50% { background-position: 100% 50%; }
       }
 
-      .hero-letter {
-        display: inline-block;
-        transition: transform 0.3s ease;
-      }
-
-      .hero-letter:hover {
-        transform: translateY(-5px) scale(1.1);
-        color: var(--theme-accent);
-      }
-    `;
+          `;
     document.head.appendChild(gradientStyles);
   }
 
